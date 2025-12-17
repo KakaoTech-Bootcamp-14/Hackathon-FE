@@ -32,6 +32,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
   const [step, setStep] = useState<Step>("upload")
   const [isDragging, setIsDragging] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [pdfName, setPdfName] = useState<string>("")
   const [settings, setSettings] = useState({
     dueDate: "",
     dailyHours: 2,
@@ -57,6 +58,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
     const file = e.dataTransfer.files[0]
     if (file?.type === "application/pdf") {
       setUploadedFile(file)
+      setPdfName(file.name.replace(".pdf", ""))
       setStep("settings")
     }
   }, [])
@@ -65,6 +67,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
     const file = e.target.files?.[0]
     if (file) {
       setUploadedFile(file)
+      setPdfName(file.name.replace(".pdf", ""))
       setStep("settings")
     }
   }
@@ -79,7 +82,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
 
     const mockPlan: StudyPlan = {
       id: Date.now().toString(),
-      pdfName: uploadedFile?.name.replace(".pdf", "") || "새 학습 자료",
+      pdfName: pdfName || "새 학습 자료",
       totalProgress: 0,
       dueDate: settings.dueDate,
       dailyHours: settings.dailyHours,
@@ -141,6 +144,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
   const handleClose = () => {
     setStep("upload")
     setUploadedFile(null)
+    setPdfName("")
     setGeneratingProgress(0)
     setGeneratedPlan(null)
     setSettings({
@@ -190,14 +194,23 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
           <>
             <DialogHeader>
               <DialogTitle>학습 설정</DialogTitle>
-              <DialogDescription>
-                <span className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  {uploadedFile?.name}
-                </span>
-              </DialogDescription>
+              <DialogDescription>PDF 정보와 학습 일정을 설정하세요</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="pdfName" className="flex items-center gap-2 text-sm">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  학습자료 이름
+                </Label>
+                <Input
+                  id="pdfName"
+                  type="text"
+                  value={pdfName}
+                  onChange={(e) => setPdfName(e.target.value)}
+                  placeholder="학습자료 이름을 입력하세요"
+                  className="bg-background"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="dueDate" className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
