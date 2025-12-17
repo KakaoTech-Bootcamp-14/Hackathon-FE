@@ -18,7 +18,7 @@ export function SplashScreen() {
       <h1 className="text-4xl font-bold text-foreground tracking-tight mb-4">ZEUS AI</h1>
 
       {/* Tagline */}
-      <p className="text-muted-foreground text-lg">Let Zeus decide your study plan.</p>
+      <p className="text-muted-foreground text-lg">학습의 신이 함께합니다.</p>
 
       {/* Loading indicator */}
       <div className="mt-12 flex gap-1.5">

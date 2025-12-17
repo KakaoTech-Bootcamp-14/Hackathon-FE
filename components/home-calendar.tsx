@@ -696,127 +696,127 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                     </div>
 
                     <CollapsibleContent>
-                      <div className="space-y-2 ml-3 border-l-2 border-border/50 pl-6">
+                      <div className="space-y-3 ml-3 pl-6 pt-2">
                         {chapters.map((chapter, chapterIndex) => (
-                          <Collapsible
-                            key={chapter.id}
-                            open={expandedChapters.has(chapter.id)}
-                            onOpenChange={() => toggleChapterExpand(chapter.id)}
-                          >
-                            {/* 중제목: 챕터 (Pill 스타일) */}
+                          <div key={chapter.id} className="space-y-2">
+                            {/* 중제목: 챕터 Pill */}
                             <div
                               className={cn(
-                                "group/chapter rounded-full bg-gradient-to-r from-zinc-900/40 to-zinc-800/30 border border-zinc-700/30",
-                                "hover:border-zinc-600/40 hover:shadow-lg hover:shadow-black/10",
-                                "transition-all duration-200",
-                                expandedChapters.has(chapter.id) && "border-zinc-600/50 shadow-lg shadow-black/10",
+                                "group/chapter rounded-full backdrop-blur-sm transition-all duration-200",
+                                "bg-gradient-to-r from-slate-100/10 via-indigo-50/8 to-slate-100/10",
+                                "border border-slate-300/15 shadow-sm",
+                                "hover:border-indigo-300/25 hover:shadow-md hover:shadow-indigo-500/5",
+                                "hover:from-slate-100/15 hover:via-indigo-50/12 hover:to-slate-100/15",
+                                expandedChapters.has(chapter.id) && "border-primary/30 shadow-lg shadow-primary/8",
                               )}
                               draggable
                               onDragStart={() => handleDragStart(plan.id, chapter.id)}
                             >
-                              <CollapsibleTrigger asChild>
-                                <button className="w-full px-5 py-3.5 flex items-center gap-4">
-                                  {/* Lock Icon */}
-                                  <div className="shrink-0">
-                                    <Lock className="h-4 w-4 text-zinc-500" />
-                                  </div>
+                              <button
+                                onClick={() => toggleChapterExpand(chapter.id)}
+                                className="w-full px-5 py-3.5 flex items-center gap-4"
+                              >
+                                {/* Lock Icon */}
+                                <div className="shrink-0">
+                                  <Lock className="h-4 w-4 text-slate-400" />
+                                </div>
 
-                                  {/* 챕터 제목 및 정보 */}
-                                  <div className="flex-1 min-w-0 text-left">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span
-                                        className={cn(
-                                          "font-semibold text-sm text-zinc-200",
-                                          chapter.completed && "line-through opacity-60",
-                                        )}
-                                      >
-                                        {chapter.title}
-                                      </span>
-                                      {chapter.completed && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                                          완료
-                                        </span>
+                                {/* 챕터 제목 및 정보 */}
+                                <div className="flex-1 min-w-0 text-left">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span
+                                      className={cn(
+                                        "font-semibold text-sm text-slate-900/90",
+                                        chapter.completed && "line-through opacity-50",
                                       )}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs text-zinc-500">
-                                      <span className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {chapter.estimatedMinutes}분
-                                      </span>
-                                      <span>·</span>
-                                      <span>
-                                        {chapter.sections.filter((s) => s.completed).length}/{chapter.sections.length}{" "}
+                                    >
+                                      {chapter.title}
+                                    </span>
+                                    {chapter.completed && (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/25 font-medium">
                                         완료
                                       </span>
-                                    </div>
+                                    )}
                                   </div>
-
-                                  {/* Plus Button */}
-                                  <div className="shrink-0">
-                                    <div
-                                      className={cn(
-                                        "h-8 w-8 rounded-full bg-zinc-800/50 border border-zinc-700/50",
-                                        "flex items-center justify-center transition-all duration-200",
-                                        "group-hover/chapter:bg-zinc-700/50 group-hover/chapter:border-zinc-600/50",
-                                        expandedChapters.has(chapter.id) && "bg-primary/10 border-primary/30 rotate-45",
-                                      )}
-                                    >
-                                      <Plus
-                                        className={cn(
-                                          "h-4 w-4 transition-colors",
-                                          expandedChapters.has(chapter.id) ? "text-primary" : "text-zinc-400",
-                                        )}
-                                      />
-                                    </div>
+                                  <div className="flex items-center gap-3 text-xs text-slate-500">
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {chapter.estimatedMinutes}분
+                                    </span>
+                                    <span>·</span>
+                                    <span>
+                                      {chapter.sections.filter((s) => s.completed).length}/{chapter.sections.length}{" "}
+                                      완료
+                                    </span>
                                   </div>
-                                </button>
-                              </CollapsibleTrigger>
-
-                              <CollapsibleContent>
-                                {/* 소제목: 섹션들 */}
-                                <div className="px-5 pb-4 pt-1 space-y-2">
-                                  {chapter.sections.map((section, sectionIndex) => (
-                                    <div
-                                      key={section.id}
-                                      onClick={() => toggleSectionComplete(plan.id, chapter.id, section.id)}
-                                      className={cn(
-                                        "group/section flex items-center gap-3 px-4 py-2.5 rounded-full",
-                                        "bg-zinc-900/60 border border-zinc-800/50",
-                                        "hover:bg-zinc-800/60 hover:border-zinc-700/50",
-                                        "cursor-pointer transition-all duration-150",
-                                      )}
-                                    >
-                                      <div
-                                        className={cn(
-                                          "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-                                          section.completed
-                                            ? "bg-gradient-to-br from-primary to-primary/80 border-primary"
-                                            : "border-zinc-600 group-hover/section:border-zinc-500",
-                                        )}
-                                      >
-                                        {section.completed && <Check className="h-2.5 w-2.5 text-white" />}
-                                      </div>
-                                      <span
-                                        className={cn(
-                                          "text-xs flex-1 font-medium",
-                                          section.completed ? "text-zinc-500 line-through" : "text-zinc-300",
-                                        )}
-                                      >
-                                        {section.title}
-                                      </span>
-                                    </div>
-                                  ))}
                                 </div>
-                              </CollapsibleContent>
+
+                                {/* Plus Button */}
+                                <div className="shrink-0">
+                                  <div
+                                    className={cn(
+                                      "h-8 w-8 rounded-full transition-all duration-200",
+                                      "bg-slate-200/50 border border-slate-300/50",
+                                      "flex items-center justify-center",
+                                      "group-hover/chapter:bg-indigo-100/60 group-hover/chapter:border-indigo-300/60",
+                                      expandedChapters.has(chapter.id) && "bg-primary/15 border-primary/50 rotate-45",
+                                    )}
+                                  >
+                                    <Plus
+                                      className={cn(
+                                        "h-4 w-4 transition-colors",
+                                        expandedChapters.has(chapter.id) ? "text-primary" : "text-slate-500",
+                                      )}
+                                    />
+                                  </div>
+                                </div>
+                              </button>
                             </div>
-                          </Collapsible>
+
+                            {/* 소제목: 섹션들 (챕터가 확장되었을 때만 표시) */}
+                            {expandedChapters.has(chapter.id) && (
+                              <div className="space-y-2 pl-3">
+                                {chapter.sections.map((section) => (
+                                  <div
+                                    key={section.id}
+                                    onClick={() => toggleSectionComplete(plan.id, chapter.id, section.id)}
+                                    className={cn(
+                                      "group/section flex items-center gap-3 px-4 py-2.5 rounded-full",
+                                      "bg-white/40 border border-slate-200/60 backdrop-blur-sm",
+                                      "hover:bg-indigo-50/50 hover:border-indigo-200/70",
+                                      "cursor-pointer transition-all duration-150",
+                                    )}
+                                  >
+                                    <div
+                                      className={cn(
+                                        "w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                                        section.completed
+                                          ? "bg-gradient-to-br from-primary to-primary/90 border-primary"
+                                          : "border-slate-300 group-hover/section:border-indigo-400",
+                                      )}
+                                    >
+                                      {section.completed && <Check className="h-2.5 w-2.5 text-white" />}
+                                    </div>
+                                    <span
+                                      className={cn(
+                                        "text-xs flex-1 font-medium",
+                                        section.completed ? "text-slate-400 line-through" : "text-slate-700",
+                                      )}
+                                    >
+                                      {section.title}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         ))}
 
                         {/* 상세 보기 버튼 */}
                         <div className="pt-2">
                           <button
                             onClick={() => onViewPdf(plan)}
-                            className="w-full py-2.5 px-4 rounded-full text-xs text-zinc-400 hover:text-primary hover:bg-zinc-900/40 transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-zinc-800"
+                            className="w-full py-2.5 px-4 rounded-full text-xs text-slate-500 hover:text-primary transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-indigo-200/50 hover:bg-indigo-50/30"
                           >
                             상세 보기
                             <ChevronRight className="h-3.5 w-3.5" />
