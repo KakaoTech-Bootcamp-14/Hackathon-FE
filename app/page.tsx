@@ -104,6 +104,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<AppView>("splash")
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<StudyPlan | null>(null)
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
   const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([])
   const [homeLoaded, setHomeLoaded] = useState(false)
   const [homeError, setHomeError] = useState<string | null>(null)
@@ -181,8 +182,9 @@ export default function Home() {
     }
   }
 
-  const handleViewPdf = (plan: StudyPlan) => {
+  const handleViewPdf = (plan: StudyPlan, chapterId?: string) => {
     setSelectedPlan(plan)
+    setSelectedChapterId(chapterId || null)
     setCurrentView("pdf-detail")
   }
 
@@ -255,7 +257,12 @@ export default function Home() {
           onLogout={handleLogout}
         />
       ) : selectedPlan ? (
-        <PdfDetailView plan={selectedPlan} onBack={() => setCurrentView("home")} onUpdatePlan={handlePlanUpdate} />
+        <PdfDetailView
+          plan={selectedPlan}
+          initialChapterId={selectedChapterId}
+          onBack={() => setCurrentView("home")}
+          onUpdatePlan={handlePlanUpdate}
+        />
       ) : null}
 
       <PdfUploadModal open={showUploadModal} onOpenChange={setShowUploadModal} onPlanCreated={handlePlanCreated} />

@@ -139,6 +139,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
       setGeneratingProgress(80)
 
       const chapterInfoDtos = response?.data?.chapterInfoDtos ?? []
+      const learningSourceId = response?.data?.learningSourceId
       const chaptersFromApi = buildChaptersFromApi(chapterInfoDtos)
 
       if (!chaptersFromApi.length) {
@@ -147,6 +148,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
 
       const generated: StudyPlan = {
         id: Date.now().toString(),
+        learningSourceId: learningSourceId,
         pdfName: pdfName || "새 학습 자료",
         totalProgress: 0,
         dueDate: settings.dueDate,

@@ -12,10 +12,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { ChatBot } from "@/components/chatbot"
 import { fetchTaskSummary, createTaskSummary, updateTaskCompletionStatus } from "@/lib/api/study"
+import { fetchChapterProgress, type ProgressData } from "@/lib/api/progress"
 import type { StudyPlan, Chapter, Section } from "@/app/page"
 
 interface PdfDetailViewProps {
   plan: StudyPlan
+  initialChapterId?: string | null
   onBack: () => void
   onUpdatePlan: (plan: StudyPlan) => void
 }
@@ -28,15 +30,31 @@ const parseTaskIdFromSectionId = (sectionId: string): number | null => {
   return match ? Number(match[1]) : null
 }
 
-export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps) {
-  const [selectedChapter, setSelectedChapter] = useState<Chapter>(plan.chapters[0])
-  const [selectedSection, setSelectedSection] = useState<Section | null>(plan.chapters[0]?.sections[0] || null)
+const parseChapterIdFromChapterId = (chapterId: string): number | null => {
+  const match = chapterId.match(/chapter-(\d+)/)
+  return match ? Number(match[1]) : null
+}
+
+export function PdfDetailView({ plan, initialChapterId, onBack, onUpdatePlan }: PdfDetailViewProps) {
+  // initialChapterId가 있으면 해당 챕터를 찾아서 초기값으로 설정, 없으면 첫 번째 챕터 사용
+  const getInitialChapter = () => {
+    if (initialChapterId) {
+      const foundChapter = plan.chapters.find((ch) => ch.id === initialChapterId)
+      if (foundChapter) return foundChapter
+    }
+    return plan.chapters[0]
+  }
+
+  const initialChapter = getInitialChapter()
+  const [selectedChapter, setSelectedChapter] = useState<Chapter>(initialChapter)
+  const [selectedSection, setSelectedSection] = useState<Section | null>(initialChapter?.sections[0] || null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   const [showChatbot, setShowChatbot] = useState(false)
   const [chapterPage, setChapterPage] = useState(0)
   const [summaryContent, setSummaryContent] = useState<string>("")
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summaryGenerating, setSummaryGenerating] = useState(false)
+  const [chapterProgressMap, setChapterProgressMap] = useState<Map<string, ProgressData>>(new Map())
 
   const totalProgress = Math.round((plan.chapters.filter((c) => c.completed).length / plan.chapters.length) * 100)
 
@@ -51,6 +69,39 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
   useEffect(() => {
     setChapterPage(0)
   }, [plan.id])
+
+  // initialChapterId가 변경되면 해당 챕터로 이동
+  useEffect(() => {
+    const newChapter = getInitialChapter()
+    setSelectedChapter(newChapter)
+    setSelectedSection(newChapter?.sections[0] || null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan.id, initialChapterId])
+
+  // 챕터별 진도율 가져오기
+  useEffect(() => {
+    const fetchAllChapterProgress = async () => {
+      const newProgressMap = new Map<string, ProgressData>()
+
+      for (const chapter of plan.chapters) {
+        const chapterId = parseChapterIdFromChapterId(chapter.id)
+        if (chapterId !== null) {
+          try {
+            const response = await fetchChapterProgress(chapterId)
+            newProgressMap.set(chapter.id, response.data)
+          } catch (error) {
+            console.error(`Failed to fetch progress for chapter ${chapter.id}`, error)
+          }
+        }
+      }
+
+      setChapterProgressMap(newProgressMap)
+    }
+
+    if (plan.chapters.length > 0) {
+      void fetchAllChapterProgress()
+    }
+  }, [plan.chapters, plan.id])
 
   // 상세 페이지 진입 시, 현재 선택된 섹션에 대해 요약 조회
   useEffect(() => {
@@ -276,6 +327,11 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
                             day: "numeric",
                           })}
                         </span>
+                        {chapterProgressMap.has(chapter.id) && (
+                          <span className="font-medium text-primary">
+                            {chapterProgressMap.get(chapter.id)?.progressRate}%
+                          </span>
+                        )}
                       </div>
                     </div>
                     <ChevronRight

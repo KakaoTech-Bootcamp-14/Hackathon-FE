@@ -75,6 +75,7 @@ export async function createSchedule(
 
 // 스케줄 재생성: POST /api/schedule/reschedule
 export async function reCreateSchedule(request: {
+  learningSourceId: number
   learningSourceTitle: string
   startDate: string
   endDate: string
