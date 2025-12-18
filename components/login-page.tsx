@@ -24,11 +24,11 @@ export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginP
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen gradient-mesh animate-fade-in flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 rounded-xl icon-gradient flex items-center justify-center shadow-md mb-4">
+          <div className="w-16 h-16 rounded-xl icon-gradient flex items-center justify-center shadow-primary glow-primary mb-4 animate-scale-in">
             <Zap className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">ZEUS AI</h1>
@@ -36,7 +36,7 @@ export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginP
         </div>
 
         {/* Login Form */}
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-soft">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-xl glass-subtle animate-fade-in-up">
           <h2 className="text-xl font-semibold text-foreground mb-6 text-center">로그인</h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -74,7 +74,7 @@ export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginP
               </div>
             </div>
 
-            <Button type="submit" className="w-full btn-gradient text-white border-0 h-11 gap-2">
+            <Button type="submit" className="w-full btn-gradient text-white border-0 h-11 gap-2 hover-lift shadow-primary">
               로그인
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -100,7 +100,7 @@ export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginP
             <Button
               variant="outline"
               onClick={onCreateAccount}
-              className="w-full h-11 border-border hover:bg-secondary bg-transparent"
+              className="w-full h-11 border-border hover:bg-secondary bg-transparent hover-lift transition-smooth"
             >
               새 계정 만들기
             </Button>

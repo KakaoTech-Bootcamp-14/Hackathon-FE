@@ -85,10 +85,10 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
   }
 
   return (
-    <div className="fixed bottom-24 right-6 w-96 h-[500px] bg-card border border-border rounded-xl shadow-lg flex flex-col z-50 overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-primary/8 to-primary/3">
+    <div className="fixed bottom-24 right-6 w-96 h-[500px] glass border border-border/50 rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden animate-scale-in">
+      <div className="flex items-center justify-between p-4 border-b border-border/50 glass-primary">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full icon-gradient flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full icon-gradient flex items-center justify-center shadow-primary">
             <Zap className="h-4 w-4 text-white" />
           </div>
           <div>
@@ -116,7 +116,7 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
               <div
                 className={cn(
                   "max-w-[80%] rounded-lg p-3 text-sm",
-                  message.role === "user" ? "btn-gradient text-white" : "bg-secondary text-foreground",
+                  message.role === "user" ? "btn-gradient text-white shadow-primary" : "bg-secondary text-foreground shadow-sm",
                 )}
               >
                 <div className="whitespace-pre-wrap">{message.content}</div>
@@ -166,7 +166,7 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
               <button
                 key={i}
                 onClick={() => handleSuggestedQuestion(q)}
-                className="text-xs px-2.5 py-1.5 rounded-full bg-secondary hover:bg-primary/10 hover:text-primary text-foreground transition-colors"
+                className="text-xs px-2.5 py-1.5 rounded-full glass-subtle hover:bg-primary/10 hover:text-primary text-foreground hover-scale transition-smooth shadow-sm"
               >
                 {q}
               </button>
@@ -194,7 +194,7 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
             type="submit"
             size="icon"
             disabled={isLoading || !input.trim()}
-            className="btn-gradient border-0 disabled:opacity-50"
+            className="btn-gradient border-0 disabled:opacity-50 shadow-primary hover-lift"
           >
             <Send className="h-4 w-4 text-white" />
           </Button>

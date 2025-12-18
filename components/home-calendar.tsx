@@ -323,8 +323,8 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <div className="w-[420px] border-r border-border bg-card flex flex-col">
+    <div className="flex h-screen bg-background animate-page-enter">
+      <div className="w-[420px] border-r border-border bg-card flex flex-col shadow-lg">
         <header className="border-b border-border px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -337,7 +337,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                 <SheetContent side="left" className="w-[300px] p-0 bg-background">
                   <SheetHeader className="border-b border-border p-4">
                     <SheetTitle className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg icon-gradient">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg icon-gradient shadow-primary">
                         <Zap className="h-4 w-4 text-white" />
                       </div>
                       <span className="font-semibold">ZEUS AI</span>
@@ -502,9 +502,9 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                       isCurrentMonth(date) &&
                         !isToday(date) &&
                         !isSelected(date) &&
-                        "text-foreground hover:bg-secondary",
-                      isToday(date) && !isSelected(date) && "bg-primary/10 text-primary font-semibold",
-                      isSelected(date) && "bg-primary/8 ring-1 ring-primary/40 font-semibold",
+                        "text-foreground hover:bg-secondary hover-scale transition-smooth",
+                      isToday(date) && !isSelected(date) && "bg-primary/10 text-primary font-semibold shadow-primary ring-2 ring-primary/20",
+                      isSelected(date) && "bg-primary/10 ring-2 ring-primary/50 font-semibold shadow-primary scale-105 transition-all",
                     )}
                   >
                     <span>{date.getDate()}</span>
@@ -597,13 +597,13 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/40 bg-transparent"
+                className="gap-2 text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/40 bg-transparent shadow-sm hover-lift transition-smooth"
                 onClick={() => setShowReplanModal(true)}
               >
                 <Zap className="h-4 w-4" />
                 ZEUS AI 재배치
               </Button>
-              <Button size="sm" className="gap-2 btn-gradient text-white border-0" onClick={onAddPdf}>
+              <Button size="sm" className="gap-2 btn-gradient text-white border-0 shadow-primary hover-lift" onClick={onAddPdf}>
                 <Plus className="h-4 w-4" />
                 학습자료 추가
               </Button>
@@ -614,12 +614,12 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
         <div className="flex-1 overflow-y-auto p-6">
           {selectedDateTasks.size === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4">
-                <Calendar className="h-7 w-7 text-primary/60" />
+              <div className="w-16 h-16 rounded-full gradient-purple-pink flex items-center justify-center mb-4 shadow-primary animate-scale-in">
+                <Calendar className="h-7 w-7 text-white" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">이 날에 학습 일정이 없습니다</h3>
               <p className="text-sm text-muted-foreground mb-4">PDF를 업로드하면 ZEUS AI가 학습 계획을 생성합니다</p>
-              <Button onClick={onAddPdf} className="gap-2 btn-gradient text-white border-0">
+              <Button onClick={onAddPdf} className="gap-2 btn-gradient text-white border-0 shadow-primary hover-lift">
                 <Plus className="h-4 w-4" />
                 학습자료 추가
               </Button>
@@ -702,11 +702,10 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                             {/* 중제목: 챕터 Pill */}
                             <div
                               className={cn(
-                                "group/chapter rounded-full backdrop-blur-sm transition-all duration-200",
-                                "bg-gradient-to-r from-slate-100/10 via-indigo-50/8 to-slate-100/10",
-                                "border border-slate-300/15 shadow-sm",
-                                "hover:border-indigo-300/25 hover:shadow-md hover:shadow-indigo-500/5",
-                                "hover:from-slate-100/15 hover:via-indigo-50/12 hover:to-slate-100/15",
+                                "group/chapter rounded-full glass-subtle transition-all duration-200",
+                                "bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5",
+                                "border border-primary/15 shadow-md",
+                                "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 hover-lift",
                                 expandedChapters.has(chapter.id) && "border-primary/30 shadow-lg shadow-primary/8",
                               )}
                               draggable
