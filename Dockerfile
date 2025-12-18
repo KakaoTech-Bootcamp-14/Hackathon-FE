@@ -1,5 +1,5 @@
-# Node.js 25 기반의 공식 이미지를 사용합니다.
-FROM node:25-alpine
+# Node.js 20 기반의 공식 이미지를 사용합니다.
+FROM node:20-alpine
 
 # 작업 디렉토리를 /app으로 설정합니다.
 WORKDIR /app
@@ -12,6 +12,9 @@ RUN npm install
 
 # 현재 디렉토리의 모든 파일을 작업 디렉토리로 복사합니다.
 COPY . .
+
+# 빌드 해야한다.
+RUN npm run build
 
 # 애플리케이션이 사용할 포트를 노출합니다.
 EXPOSE 3000
