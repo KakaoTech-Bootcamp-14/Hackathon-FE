@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ZEUS AI | Let Zeus decide your study plan",
+  title: "나비서 | Let Zeus decide your study plan",
   description: "AI-powered study planner that creates optimal learning schedules from your PDFs",
   generator: "v0.app",
   icons: {

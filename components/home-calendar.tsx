@@ -523,7 +523,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg icon-gradient shadow-primary">
                         <Zap className="h-4 w-4 text-white" />
                       </div>
-                      <span className="font-semibold">ZEUS AI</span>
+                      <span className="font-semibold">나비서</span>
                     </SheetTitle>
                   </SheetHeader>
 
@@ -610,7 +610,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                 <div className="flex h-7 w-7 items-center justify-center rounded-full icon-gradient shadow-md">
                   <Zap className="h-3.5 w-3.5 text-white" />
                 </div>
-                <span className="font-semibold text-foreground">ZEUS AI</span>
+                <span className="font-semibold text-foreground">나비서</span>
               </div>
             </div>
 
@@ -819,7 +819,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                 <Calendar className="h-7 w-7 text-white" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">이 날에 학습 일정이 없습니다</h3>
-              <p className="text-sm text-muted-foreground mb-4">PDF를 업로드하면 ZEUS AI가 학습 계획을 생성합니다</p>
+              <p className="text-sm text-muted-foreground mb-4">PDF를 업로드하면 나비서가 학습 계획을 생성합니다</p>
               <Button onClick={onAddPdf} className="gap-2 btn-gradient text-white border-0 shadow-lg hover-lift rounded-full">
                 <Plus className="h-4 w-4" />
                 학습자료 추가
@@ -1104,7 +1104,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-primary" />
-              ZEUS AI 스케줄 재생성
+              나비서 스케줄 재생성
             </DialogTitle>
             <DialogDescription>학습 기간과 하루 학습 시간을 다시 설정하고 스케줄을 재생성합니다.</DialogDescription>
           </DialogHeader>
@@ -1237,7 +1237,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
               className="gap-2 btn-gradient text-white border-0 disabled:opacity-50"
             >
               <Zap className="h-4 w-4" />
-              {replanLoading ? "재생성 중..." : "ZEUS AI로 스케줄 재생성"}
+              {replanLoading ? "재생성 중..." : "나비서로 스케줄 재생성"}
             </Button>
           </DialogFooter>
         </DialogContent>

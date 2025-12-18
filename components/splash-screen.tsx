@@ -15,7 +15,7 @@ export function SplashScreen() {
       </div>
 
       {/* Brand Name */}
-      <h1 className="text-4xl font-bold text-foreground tracking-tight mb-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>ZEUS AI</h1>
+      <h1 className="text-4xl font-bold text-foreground tracking-tight mb-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>나비서</h1>
 
       {/* Tagline */}
       <p className="text-muted-foreground text-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>학습의 신이 함께합니다.</p>
