@@ -833,10 +833,56 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                             </button>
                           </CollapsibleTrigger>
                           <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-1 h-8 px-3 text-[11px] gap-1 border-slate-200 text-slate-600 hover:bg-secondary hover:border-primary/30"
+                            onClick={() => {
+                              setQnaPlan(plan)
+                              // QnA봇을 열 때 해당 자료 블록이 접혀 있으면 자동으로 펼쳐줌
+                              setExpandedPlans((prev) => {
+                                const next = new Set(prev)
+                                next.add(planId)
+                                return next
+                              })
+                            }}
+                          >
+                            <Zap className="h-3 w-3 text-primary" />
+                            AI 학습 Agent
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-1 h-8 px-3 text-[11px] gap-1 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50"
+                            onClick={() => {
+                              setReplanTargetPlan(plan)
+                              // 기존 플랜 정보로 초기값 세팅
+                              const allDates = plan.chapters.map((ch) => new Date(ch.scheduledDate))
+                              const minDate =
+                                allDates.length > 0
+                                  ? new Date(Math.min(...allDates.map((d) => d.getTime())))
+                                  : new Date()
+                              const maxDate =
+                                allDates.length > 0
+                                  ? new Date(Math.max(...allDates.map((d) => d.getTime())))
+                                  : new Date(plan.dueDate)
+
+                              setReplanSettings({
+                                startDate: minDate.toISOString().split("T")[0],
+                                dueDate: maxDate.toISOString().split("T")[0],
+                                dailyHours: plan.dailyHours,
+                                excludeWeekends: plan.excludeWeekends,
+                              })
+                              setShowReplanModal(true)
+                            }}
+                          >
+                            <Zap className="h-3 w-3" />
+                            스케줄 재생성
+                          </Button>
+                          <Button
                             size="icon"
                             variant="ghost"
                             onClick={() => startEditingPlanName(planId, plan.pdfName)}
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-2 hover:bg-secondary"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-secondary"
                           >
                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
