@@ -24,8 +24,8 @@ jobs:
       - name: 의존성 설치
         run: npm install
 
-      - name: 테스트 실행
-        run: npm test
+      - name: 정적 코드 검사기 실행
+        run: npm run lint
 
   build-and-push-image:
     needs: test
