@@ -3,67 +3,67 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 제우스AI - Quietly Premium 색상 시스템 */
-/* Muted indigo/violet 계열 - calm, slightly mysterious, AI SaaS 느낌 */
+/* 제우스AI - Warm & Friendly 색상 시스템 */
+/* Peach + Mint 계열 - 따뜻하고 친근하며 귀여운 느낌 */
 :root {
-  /* 배경: 부드러운 blue 틴트 (더 따뜻한 느낌) */
-  --background: oklch(0.99 0.002 265);
-  --foreground: oklch(0.20 0.02 265);
+  /* 배경: 부드러운 크림/피치 틴트 */
+  --background: oklch(0.99 0.005 50);
+  --foreground: oklch(0.25 0.015 25);
 
-  /* 카드: 순백 (배경과 대비를 위해) */
+  /* 카드: 따뜻한 화이트 */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 265);
+  --card-foreground: oklch(0.22 0.015 25);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 265);
+  --popover-foreground: oklch(0.22 0.015 25);
 
-  /* 프라이머리: 더 밝고 생동감 있는 보라-파랑 */
-  --primary: oklch(0.65 0.28 270);
+  /* 프라이머리: 생동감 있는 코랄/피치 */
+  --primary: oklch(0.72 0.18 35);
   --primary-foreground: oklch(1 0 0);
 
-  /* 프라이머리 그라디언트용 - 부드럽고 자연스러운 전환 */
-  --primary-from: oklch(0.62 0.30 280);
-  --primary-to: oklch(0.68 0.26 255);
+  /* 프라이머리 그라디언트용 - 코랄에서 피치로 */
+  --primary-from: oklch(0.70 0.20 25);
+  --primary-to: oklch(0.75 0.16 45);
 
-  /* 다채로운 액센트 컬러 - 더 조화롭고 생동감 있게 */
-  --accent-purple: oklch(0.68 0.28 295);
+  /* 다채로운 액센트 컬러 - 조화로운 파스텔 톤 */
+  --accent-purple: oklch(0.75 0.15 310);
   --accent-purple-foreground: oklch(1 0 0);
-  --accent-cyan: oklch(0.72 0.18 205);
-  --accent-cyan-foreground: oklch(0.15 0.02 265);
-  --accent-pink: oklch(0.70 0.26 345);
+  --accent-cyan: oklch(0.75 0.12 180);
+  --accent-cyan-foreground: oklch(0.20 0.015 180);
+  --accent-pink: oklch(0.78 0.18 5);
   --accent-pink-foreground: oklch(1 0 0);
-  --accent-orange: oklch(0.72 0.20 50);
-  --accent-orange-foreground: oklch(0.15 0.02 45);
-  --accent-green: oklch(0.70 0.20 150);
-  --accent-green-foreground: oklch(0.15 0.02 145);
+  --accent-orange: oklch(0.76 0.18 55);
+  --accent-orange-foreground: oklch(0.20 0.015 55);
+  --accent-green: oklch(0.75 0.14 160);
+  --accent-green-foreground: oklch(0.20 0.015 160);
 
-  /* 세컨더리: 더 눈에 띄는 secondary */
-  --secondary: oklch(0.95 0.01 265);
-  --secondary-foreground: oklch(0.25 0.02 265);
+  /* 세컨더리: 부드러운 민트 */
+  --secondary: oklch(0.96 0.008 160);
+  --secondary-foreground: oklch(0.28 0.015 160);
 
-  /* 뮤트: 더 따뜻한 muted */
-  --muted: oklch(0.94 0.008 265);
-  --muted-foreground: oklch(0.48 0.02 265);
+  /* 뮤트: 따뜻한 베이지 */
+  --muted: oklch(0.95 0.01 50);
+  --muted-foreground: oklch(0.50 0.015 35);
 
-  /* 액센트: 완료 상태용 - 차분한 slate */
-  --accent: oklch(0.35 0.02 265);
-  --accent-foreground: oklch(0.98 0 0);
+  /* 액센트: 완료 상태용 - 부드러운 민트 그린 */
+  --accent: oklch(0.72 0.14 160);
+  --accent-foreground: oklch(1 0 0);
 
-  --destructive: oklch(0.55 0.2 25);
+  --destructive: oklch(0.62 0.22 15);
   --destructive-foreground: oklch(0.98 0 0);
 
-  --success: oklch(0.68 0.18 145);
+  --success: oklch(0.72 0.14 150);
   --success-foreground: oklch(1 0 0);
 
-  /* 보더: 매우 미묘한 구분선 */
-  --border: oklch(0.93 0.005 265);
-  --input: oklch(0.93 0.005 265);
-  --ring: oklch(0.60 0.25 265);
+  /* 보더: 매우 미묘한 따뜻한 구분선 */
+  --border: oklch(0.94 0.008 50);
+  --input: oklch(0.94 0.008 50);
+  --ring: oklch(0.70 0.18 35);
 
-  --chart-1: oklch(0.55 0.12 270);
-  --chart-2: oklch(0.35 0.02 265);
-  --chart-3: oklch(0.55 0.2 25);
-  --chart-4: oklch(0.65 0.1 145);
-  --chart-5: oklch(0.55 0.12 200);
+  --chart-1: oklch(0.72 0.18 35);
+  --chart-2: oklch(0.75 0.14 160);
+  --chart-3: oklch(0.76 0.18 55);
+  --chart-4: oklch(0.75 0.12 180);
+  --chart-5: oklch(0.75 0.15 310);
 
   /* 귀여운 느낌을 위한 더 큰 radius - soft, friendly */
   --radius: 1rem;
@@ -73,58 +73,58 @@
   --kakao-yellow-foreground: oklch(0.25 0.02 90);
 
   /* 사이드바 */
-  --sidebar: oklch(0.995 0.002 265);
-  --sidebar-foreground: oklch(0.18 0.02 265);
-  --sidebar-primary: oklch(0.55 0.12 270);
+  --sidebar: oklch(0.995 0.005 50);
+  --sidebar-foreground: oklch(0.22 0.015 25);
+  --sidebar-primary: oklch(0.72 0.18 35);
   --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.97 0.006 265);
-  --sidebar-accent-foreground: oklch(0.25 0.02 265);
-  --sidebar-border: oklch(0.94 0.005 265);
-  --sidebar-ring: oklch(0.55 0.12 270);
+  --sidebar-accent: oklch(0.97 0.008 50);
+  --sidebar-accent-foreground: oklch(0.28 0.015 35);
+  --sidebar-border: oklch(0.94 0.008 50);
+  --sidebar-ring: oklch(0.72 0.18 35);
 }
 
 .dark {
-  --background: oklch(0.15 0.01 265);
-  --foreground: oklch(0.95 0.005 265);
-  --card: oklch(0.18 0.012 265);
-  --card-foreground: oklch(0.95 0.005 265);
-  --popover: oklch(0.18 0.012 265);
-  --popover-foreground: oklch(0.95 0.005 265);
-  --primary: oklch(0.72 0.28 270);
-  --primary-foreground: oklch(0.15 0.01 265);
-  --primary-from: oklch(0.70 0.30 280);
-  --primary-to: oklch(0.74 0.26 255);
-  --accent-purple: oklch(0.72 0.28 295);
-  --accent-purple-foreground: oklch(0.15 0.01 265);
-  --accent-cyan: oklch(0.76 0.18 205);
-  --accent-cyan-foreground: oklch(0.15 0.01 265);
-  --accent-pink: oklch(0.74 0.26 345);
-  --accent-pink-foreground: oklch(0.15 0.01 265);
-  --accent-orange: oklch(0.76 0.20 50);
-  --accent-orange-foreground: oklch(0.15 0.01 265);
-  --accent-green: oklch(0.74 0.20 150);
-  --accent-green-foreground: oklch(0.15 0.01 265);
-  --secondary: oklch(0.22 0.012 265);
-  --secondary-foreground: oklch(0.95 0.005 265);
-  --muted: oklch(0.22 0.012 265);
-  --muted-foreground: oklch(0.60 0.01 265);
-  --accent: oklch(0.70 0.25 265);
-  --accent-foreground: oklch(0.15 0.01 265);
-  --destructive: oklch(0.55 0.2 25);
+  --background: oklch(0.18 0.01 25);
+  --foreground: oklch(0.95 0.005 50);
+  --card: oklch(0.20 0.012 25);
+  --card-foreground: oklch(0.95 0.005 50);
+  --popover: oklch(0.20 0.012 25);
+  --popover-foreground: oklch(0.95 0.005 50);
+  --primary: oklch(0.75 0.20 35);
+  --primary-foreground: oklch(0.18 0.01 25);
+  --primary-from: oklch(0.73 0.22 25);
+  --primary-to: oklch(0.77 0.18 45);
+  --accent-purple: oklch(0.77 0.17 310);
+  --accent-purple-foreground: oklch(0.18 0.01 25);
+  --accent-cyan: oklch(0.77 0.14 180);
+  --accent-cyan-foreground: oklch(0.18 0.01 25);
+  --accent-pink: oklch(0.80 0.20 5);
+  --accent-pink-foreground: oklch(0.18 0.01 25);
+  --accent-orange: oklch(0.78 0.20 55);
+  --accent-orange-foreground: oklch(0.18 0.01 25);
+  --accent-green: oklch(0.77 0.16 160);
+  --accent-green-foreground: oklch(0.18 0.01 25);
+  --secondary: oklch(0.25 0.012 160);
+  --secondary-foreground: oklch(0.95 0.005 50);
+  --muted: oklch(0.25 0.012 25);
+  --muted-foreground: oklch(0.62 0.01 35);
+  --accent: oklch(0.74 0.16 160);
+  --accent-foreground: oklch(0.18 0.01 25);
+  --destructive: oklch(0.64 0.24 15);
   --destructive-foreground: oklch(0.95 0 0);
-  --success: oklch(0.72 0.18 145);
-  --success-foreground: oklch(0.15 0.01 265);
-  --border: oklch(0.28 0.012 265);
-  --input: oklch(0.28 0.012 265);
-  --ring: oklch(0.70 0.25 265);
-  --sidebar: oklch(0.16 0.01 265);
-  --sidebar-foreground: oklch(0.95 0.005 265);
-  --sidebar-primary: oklch(0.70 0.25 265);
-  --sidebar-primary-foreground: oklch(0.15 0.01 265);
-  --sidebar-accent: oklch(0.22 0.012 265);
-  --sidebar-accent-foreground: oklch(0.95 0.005 265);
-  --sidebar-border: oklch(0.28 0.012 265);
-  --sidebar-ring: oklch(0.70 0.25 265);
+  --success: oklch(0.74 0.16 150);
+  --success-foreground: oklch(0.18 0.01 25);
+  --border: oklch(0.30 0.012 25);
+  --input: oklch(0.30 0.012 25);
+  --ring: oklch(0.72 0.20 35);
+  --sidebar: oklch(0.19 0.01 25);
+  --sidebar-foreground: oklch(0.95 0.005 50);
+  --sidebar-primary: oklch(0.72 0.20 35);
+  --sidebar-primary-foreground: oklch(0.18 0.01 25);
+  --sidebar-accent: oklch(0.25 0.012 25);
+  --sidebar-accent-foreground: oklch(0.95 0.005 50);
+  --sidebar-border: oklch(0.30 0.012 25);
+  --sidebar-ring: oklch(0.72 0.20 35);
 }
 
 @theme inline {
@@ -201,23 +201,23 @@
 
 /* === GRADIENT SYSTEM === */
 
-/* Primary Gradients - 더 부드럽고 생동감 있게 */
+/* Primary Gradients - 따뜻하고 생동감 있는 코랄/피치 */
 .btn-gradient {
   background: linear-gradient(135deg,
-    oklch(0.62 0.30 280),
-    oklch(0.68 0.26 255)
+    oklch(0.70 0.20 25),
+    oklch(0.75 0.16 45)
   );
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-gradient:hover {
   background: linear-gradient(135deg,
-    oklch(0.66 0.32 285),
-    oklch(0.72 0.28 250)
+    oklch(0.73 0.22 22),
+    oklch(0.78 0.18 48)
   );
   box-shadow:
-    0 8px 16px oklch(0.65 0.28 270 / 0.25),
-    0 0 32px oklch(0.65 0.28 270 / 0.15);
+    0 8px 16px oklch(0.72 0.18 35 / 0.30),
+    0 0 32px oklch(0.72 0.18 35 / 0.20);
   transform: translateY(-1px);
 }
 
@@ -227,50 +227,50 @@
 
 .icon-gradient {
   background: linear-gradient(145deg,
-    oklch(0.62 0.30 280),
-    oklch(0.68 0.26 255)
+    oklch(0.70 0.20 25),
+    oklch(0.75 0.16 45)
   );
 }
 
-/* Multi-color Gradients - 더 조화롭고 생동감 있게 */
+/* Multi-color Gradients - 조화로운 파스텔 톤 */
 .gradient-purple-pink {
   background: linear-gradient(135deg,
-    oklch(0.68 0.28 295),
-    oklch(0.70 0.26 345)
+    oklch(0.75 0.15 310),
+    oklch(0.78 0.18 5)
   );
 }
 
 .gradient-cyan-blue {
   background: linear-gradient(135deg,
-    oklch(0.72 0.18 205),
-    oklch(0.68 0.26 255)
+    oklch(0.75 0.12 180),
+    oklch(0.75 0.14 160)
   );
 }
 
 .gradient-orange-pink {
   background: linear-gradient(135deg,
-    oklch(0.72 0.20 50),
-    oklch(0.70 0.26 345)
+    oklch(0.76 0.18 55),
+    oklch(0.78 0.18 5)
   );
 }
 
-/* Mesh Gradients for Backgrounds - 더 부드럽고 조화로운 색상 */
+/* Mesh Gradients for Backgrounds - 따뜻하고 조화로운 색상 */
 .gradient-mesh {
   background:
-    radial-gradient(at 0% 0%, oklch(0.68 0.28 295 / 0.10) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, oklch(0.72 0.18 205 / 0.10) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, oklch(0.70 0.26 345 / 0.10) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, oklch(0.68 0.26 255 / 0.10) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, oklch(0.78 0.18 5 / 0.10) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, oklch(0.75 0.14 160 / 0.10) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, oklch(0.76 0.18 55 / 0.10) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, oklch(0.75 0.12 180 / 0.10) 0px, transparent 50%);
 }
 
-/* Animated Gradient - 더 생동감 있는 색상 전환 */
+/* Animated Gradient - 따뜻한 색상 전환 */
 .gradient-animated {
   background: linear-gradient(
     135deg,
-    oklch(0.62 0.30 280),
-    oklch(0.68 0.26 255),
-    oklch(0.72 0.18 205),
-    oklch(0.68 0.28 295)
+    oklch(0.70 0.20 25),
+    oklch(0.75 0.16 45),
+    oklch(0.75 0.14 160),
+    oklch(0.76 0.18 55)
   );
   background-size: 300% 300%;
   animation: gradient-shift 8s ease infinite;
@@ -338,11 +338,11 @@
     0 12px 20px -8px oklch(0 0 0 / 0.06);
 }
 
-/* Colored Shadows - softer for cute feel */
+/* Colored Shadows - 따뜻하고 부드러운 그림자 */
 .shadow-primary {
   box-shadow:
-    0 6px 12px -3px oklch(0.60 0.25 265 / 0.15),
-    0 3px 6px -2px oklch(0.60 0.25 265 / 0.08);
+    0 6px 12px -3px oklch(0.72 0.18 35 / 0.20),
+    0 3px 6px -2px oklch(0.72 0.18 35 / 0.12);
 }
 
 .shadow-kakao {
@@ -353,14 +353,14 @@
 
 .shadow-primary-lg {
   box-shadow:
-    0 20px 40px -8px oklch(0.60 0.25 265 / 0.25),
-    0 8px 16px -4px oklch(0.60 0.25 265 / 0.15);
+    0 20px 40px -8px oklch(0.72 0.18 35 / 0.30),
+    0 8px 16px -4px oklch(0.72 0.18 35 / 0.20);
 }
 
 .shadow-success {
   box-shadow:
-    0 8px 16px -4px oklch(0.68 0.18 145 / 0.2),
-    0 4px 8px -2px oklch(0.68 0.18 145 / 0.12);
+    0 8px 16px -4px oklch(0.72 0.14 150 / 0.2),
+    0 4px 8px -2px oklch(0.72 0.14 150 / 0.12);
 }
 
 /* Floating Effect */
@@ -389,14 +389,14 @@
 /* Glow Effects */
 .glow-primary {
   box-shadow:
-    0 0 20px oklch(0.60 0.25 265 / 0.3),
-    0 0 40px oklch(0.60 0.25 265 / 0.2);
+    0 0 20px oklch(0.72 0.18 35 / 0.35),
+    0 0 40px oklch(0.72 0.18 35 / 0.25);
 }
 
 .glow-purple {
   box-shadow:
-    0 0 20px oklch(0.65 0.25 300 / 0.3),
-    0 0 40px oklch(0.65 0.25 300 / 0.2);
+    0 0 20px oklch(0.75 0.15 310 / 0.3),
+    0 0 40px oklch(0.75 0.15 310 / 0.2);
 }
 
 /* Updated soft shadow for cards */
@@ -421,9 +421,9 @@
 }
 
 .glass-primary {
-  background: oklch(0.60 0.25 265 / 0.1);
+  background: oklch(0.72 0.18 35 / 0.1);
   backdrop-filter: blur(16px) saturate(200%);
-  border: 1px solid oklch(0.60 0.25 265 / 0.2);
+  border: 1px solid oklch(0.72 0.18 35 / 0.2);
 }
 
 .glass-subtle {
@@ -603,8 +603,8 @@
 
 .hover-glow:hover {
   box-shadow:
-    0 0 20px oklch(0.60 0.25 265 / 0.3),
-    0 8px 24px oklch(0.60 0.25 265 / 0.2);
+    0 0 20px oklch(0.72 0.18 35 / 0.35),
+    0 8px 24px oklch(0.72 0.18 35 / 0.25);
 }
 
 /* Loading Shimmer */
@@ -666,8 +666,8 @@ body {
 /* Enhanced text utilities */
 .text-gradient {
   background: linear-gradient(135deg,
-    oklch(0.58 0.28 275),
-    oklch(0.65 0.22 250)
+    oklch(0.70 0.20 25),
+    oklch(0.75 0.16 45)
   );
   -webkit-background-clip: text;
   background-clip: text;

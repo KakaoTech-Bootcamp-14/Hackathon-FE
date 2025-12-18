@@ -604,7 +604,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
         <header className="border-b border-border px-6 py-4 bg-card rounded-br-3xl">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xs font-medium text-muted-foreground">{formatSelectedDate()}</h1>
+              <h1 className="text-[10px] font-normal text-muted-foreground/80">{formatSelectedDate()}</h1>
               <p className="text-xs text-muted-foreground mt-0.5">{getTotalTaskCount()}개의 학습 항목</p>
             </div>
             <div className="flex items-center gap-2">
