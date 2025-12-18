@@ -1,0 +1,9 @@
+services:
+
+  front:
+    image: wpgur07/zeus-fe:latest
+    container_name: zeusAI-front
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
