@@ -47,8 +47,9 @@ export function ChatBot({
     }
   }, [messages])
 
-  // pdfName / currentChapter / learningSourceId 변경 시, 안내 메시지 + 이전 채팅 내역을 불러온다.
-  useEffect(() => {
+  // 히스토리 불러오기 함수 (재사용 가능)
+  const loadHistory = async () => {
+    const userId = currentUserId ?? 1
     const safeChapter = currentChapter || pdfName
     const greeting: Message = {
       id: "greeting-1",
@@ -56,57 +57,64 @@ export function ChatBot({
       content: `안녕하세요! ZEUS AI입니다. "${pdfName}" 학습을 도와드리겠습니다. 현재 "${safeChapter}"를 학습 중이시네요. 궁금한 점이 있으시면 질문해주세요!`,
     }
 
-    const loadHistory = async () => {
-      const userId = currentUserId ?? 1
-
-      // learningSourceId가 없으면 서버 기록 없이 기본 인사만 보여준다.
-      if (!learningSourceId) {
-        setMessages([greeting])
-        return
-      }
-
-      try {
-        const res: any = await apiFetch(
-          `/api/learning-sources/${learningSourceId}/chat?currentUserId=${userId}&size=50`,
-          {
-            method: "GET",
-          },
-        )
-
-        const data = (res as any)?.data ?? res
-        const rawItems: any[] =
-          data?.content ?? data?.chats ?? data?.messages ?? []
-
-        // 서버는 id DESC 정렬로 내려주므로, 오래된 것부터 보이도록 역순 정렬
-        const items = [...rawItems].reverse()
-
-        const history: Message[] = items
-          .map((item: any, idx: number) => {
-            const rawRole = item.role ?? item.sender ?? item.senderType ?? item.from
-            const role: "user" | "assistant" =
-              rawRole && String(rawRole).toLowerCase().includes("user")
-                ? "user"
-                : "assistant"
-
-            const content = item.content ?? item.message ?? item.text
-            if (!content) return null
-
-            return {
-              id: String(item.id ?? item.chatId ?? `srv-${idx}`),
-              role,
-              content,
-            }
-          })
-          .filter((m): m is Message => !!m)
-
-        setMessages([greeting, ...history])
-      } catch (error) {
-        console.error("Failed to load chat history", error)
-        // 실패 시에도 최소한 인사 메시지는 보여준다.
-        setMessages([greeting])
-      }
+    // learningSourceId가 없으면 서버 기록 없이 기본 인사만 보여준다.
+    if (!learningSourceId) {
+      setMessages([greeting])
+      return
     }
 
+    try {
+      const res: any = await apiFetch(
+        `/api/learning-sources/${learningSourceId}/chat?currentUserId=${userId}&size=50`,
+        {
+          method: "GET",
+        },
+      )
+
+      const data = (res as any)?.data ?? res
+      const rawItems: any[] =
+        data?.content ?? data?.chats ?? data?.messages ?? []
+
+      // 서버는 id DESC 정렬로 내려주므로, 오래된 것부터 보이도록 역순 정렬
+      const items = [...rawItems].reverse()
+
+      const history: Message[] = items
+        .map((item: any, idx: number) => {
+          const rawRole = item.role ?? item.sender ?? item.senderType ?? item.from
+          const role: "user" | "assistant" =
+            rawRole && String(rawRole).toLowerCase().includes("user")
+              ? "user"
+              : "assistant"
+
+          const content = item.content ?? item.message ?? item.text
+          if (!content) return null
+
+          const message: Message = {
+            id: String(item.id ?? item.chatId ?? `srv-${idx}`),
+            role,
+            content,
+          }
+          
+          if (item.reference) {
+            message.reference = item.reference
+          }
+          
+          return message
+        })
+        .filter((m): m is Message => !!m)
+
+      setMessages([greeting, ...history])
+    } catch (error) {
+      console.error("Failed to load chat history", error)
+      // 실패 시에도 최소한 인사 메시지는 보여준다.
+      setMessages([greeting])
+    }
+  }
+
+  // pdfName / currentChapter / learningSourceId / currentUserId 변경 시, 안내 메시지 + 이전 채팅 내역을 불러온다.
+  useEffect(() => {
+    // 사용자나 학습자료가 변경되면 메시지 초기화 후 새로 불러오기
+    setMessages([])
     loadHistory()
   }, [pdfName, currentChapter, learningSourceId, currentUserId])
 
@@ -157,6 +165,7 @@ export function ChatBot({
     }
 
     setMessages((prev) => [...prev, userMessage])
+    const userInput = input
     setInput("")
     setIsLoading(true)
 
@@ -167,7 +176,7 @@ export function ChatBot({
       try {
         const res: any = await apiFetch(`/api/learning-sources/${learningSourceId}/chat?currentUserId=${userId}`, {
           method: "POST",
-          body: JSON.stringify({ content: input }),
+          body: JSON.stringify({ content: userInput }),
         })
 
         // 서버 응답 형태를 최대한 유연하게 처리
@@ -182,16 +191,34 @@ export function ChatBot({
         //
         // 예상 응답 예시:
         // { code, message, data: { userChatId, assistantChatId, assistantContent, sources: [...] } }
+        // 또는 직접: { userChatId, assistantChatId, assistantContent, sources: [...] }
         const root = (res as any) ?? {}
-        const envelope = root.data ?? root
-        const payload = envelope.data ?? envelope
+        
+        // 응답 구조를 더 정확하게 파싱
+        // 1) { code, message, data: { ... } } 형태
+        // 2) { data: { ... } } 형태  
+        // 3) 직접 { assistantContent, ... } 형태
+        let payload = root.data ?? root
+        
+        // data 안에 또 data가 있을 수 있음
+        if (payload?.data) {
+          payload = payload.data
+        }
 
         const replyContent =
           payload?.assistantContent ??
           payload?.assistantMessage?.content ??
           payload?.content ??
           payload?.answer ??
-          generateMockResponse(input)
+          null
+
+        if (!replyContent) {
+          console.warn("서버 응답에서 assistantContent를 찾을 수 없습니다. 응답:", res)
+          // 서버 응답이 없으면 히스토리를 다시 불러와서 최신 메시지 확인
+          await loadHistory()
+          setIsLoading(false)
+          return
+        }
 
         // 백엔드에서 내려주는 참조 정보(sources)가 있으면 첫 번째 것을 참조로 붙인다.
         let reference: string | undefined = undefined
@@ -206,19 +233,23 @@ export function ChatBot({
         }
 
         const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
+          id: String(payload?.assistantChatId ?? Date.now() + 1),
           role: "assistant",
           content: replyContent,
           reference: reference ?? `${currentChapter} > ${currentSection || "개요"}`,
         }
 
+        // 새로 받은 메시지를 추가하고, 히스토리를 다시 불러와서 최신 상태로 갱신
         setMessages((prev) => [...prev, assistantMessage])
+        
+        // 서버에 저장된 최신 히스토리를 다시 불러와서 동기화
+        await loadHistory()
       } catch (error) {
         console.error("Failed to send chat to server, falling back to local response", error)
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: generateMockResponse(input),
+          content: generateMockResponse(userInput),
           reference: `${currentChapter} > ${currentSection || "개요"}`,
         }
         setMessages((prev) => [...prev, assistantMessage])
@@ -232,7 +263,7 @@ export function ChatBot({
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: generateMockResponse(input),
+        content: generateMockResponse(userInput),
         reference: `${currentChapter} > ${currentSection || "개요"}`,
       }
 

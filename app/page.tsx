@@ -114,6 +114,13 @@ export default function Home() {
     const hasSession = sessionStorage.getItem(SESSION_KEY) === "true"
     if (hasSession) {
       setCurrentView("home")
+    } else {
+      // 세션이 없으면 모든 상태 초기화
+      setSelectedPlan(null)
+      setStudyPlans([])
+      setHomeLoaded(false)
+      setHomeError(null)
+      setShowUploadModal(false)
     }
   }, [])
 
@@ -122,9 +129,28 @@ export default function Home() {
     if (currentView === "splash") {
       const timer = setTimeout(() => {
         const hasSession = typeof window !== "undefined" && sessionStorage.getItem(SESSION_KEY) === "true"
+        if (!hasSession) {
+          // 로그인 화면으로 갈 때 이전 데이터 초기화
+          setSelectedPlan(null)
+          setStudyPlans([])
+          setHomeLoaded(false)
+          setHomeError(null)
+          setShowUploadModal(false)
+        }
         setCurrentView(hasSession ? "home" : "login")
       }, 2500)
       return () => clearTimeout(timer)
+    }
+  }, [currentView])
+
+  // 로그인 화면으로 전환될 때 이전 데이터 초기화
+  useEffect(() => {
+    if (currentView === "login") {
+      setSelectedPlan(null)
+      setStudyPlans([])
+      setHomeLoaded(false)
+      setHomeError(null)
+      setShowUploadModal(false)
     }
   }, [currentView])
 
@@ -133,6 +159,10 @@ export default function Home() {
 
     const load = async () => {
       try {
+        // 이전 데이터 완전히 초기화 후 새로 불러오기
+        setStudyPlans([])
+        setHomeError(null)
+        
         const res = await fetchHomeData()
         const plans = mapHomeDataToStudyPlans(res.data)
         setStudyPlans(plans)
@@ -140,6 +170,7 @@ export default function Home() {
       } catch (error: any) {
         console.error("Failed to load home data", error)
         setHomeError("홈 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.")
+        setStudyPlans([])
       } finally {
         setHomeLoaded(true)
       }
@@ -198,8 +229,12 @@ export default function Home() {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(SESSION_KEY)
     }
+    // 모든 상태 초기화
     setSelectedPlan(null)
     setStudyPlans([])
+    setHomeLoaded(false)
+    setHomeError(null)
+    setShowUploadModal(false)
     setCurrentView("login")
   }
 
@@ -207,6 +242,12 @@ export default function Home() {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(SESSION_KEY, "true")
     }
+    // 로그인 시 이전 사용자 데이터 완전히 초기화
+    setSelectedPlan(null)
+    setStudyPlans([])
+    setHomeLoaded(false)
+    setHomeError(null)
+    setShowUploadModal(false)
     setCurrentView("home")
   }
 
