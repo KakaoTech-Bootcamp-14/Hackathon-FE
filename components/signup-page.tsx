@@ -3,10 +3,11 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Zap, User, Mail, Lock, ArrowRight, ArrowLeft } from "lucide-react"
+import { Zap, User, UserCircle2, Lock, ArrowRight, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { signup } from "@/lib/api/auth"
 
 interface SignUpPageProps {
   onSignUp: () => void
@@ -14,13 +15,30 @@ interface SignUpPageProps {
 }
 
 export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [nickname, setNickname] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSignUp()
+
+    if (loading) return
+
+    try {
+      setLoading(true)
+      await signup({
+        username: username,
+        password,
+        nickname,
+      })
+      onSignUp()
+    } catch (error) {
+      console.error("Signup failed", error)
+      alert("회원가입에 실패했습니다. 입력 정보를 확인하거나 잠시 후 다시 시도해주세요.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -42,34 +60,34 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm text-foreground">
+              <Label htmlFor="nickname" className="text-sm text-foreground">
                 이름
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <UserCircle2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="name"
+                  id="nickname"
                   type="text"
                   placeholder="홍길동"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
                   className="pl-10 bg-background"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm text-foreground">
-                이메일
+              <Label htmlFor="username" className="text-sm text-foreground">
+                아이디
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="아이디를 입력하세요"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="pl-10 bg-background"
                 />
               </div>
@@ -84,17 +102,20 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="8자 이상 입력"
+                  placeholder="비밀번호를 입력하세요"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 bg-background"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">비밀번호는 8자 이상이어야 합니다</p>
             </div>
 
-            <Button type="submit" className="w-full btn-gradient text-white border-0 h-11 gap-2 hover-lift shadow-primary">
-              ZEUS AI 시작하기
+            <Button
+              type="submit"
+              className="w-full btn-gradient text-white border-0 h-11 gap-2 hover-lift shadow-primary"
+              disabled={loading}
+            >
+              {loading ? "가입 중..." : "ZEUS AI 시작하기"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </form>

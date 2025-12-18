@@ -4,14 +4,17 @@ import { useState, useRef, useEffect } from "react"
 import { Send, X, Zap, User, FileText, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { apiFetch } from "@/lib/api/client"
 
 interface ChatBotProps {
   pdfName: string
   currentChapter: string
   currentSection?: string
   onClose: () => void
+  embedded?: boolean
+  learningSourceId?: number
+  currentUserId?: number
 }
 
 type Message = {
@@ -21,17 +24,19 @@ type Message = {
   reference?: string
 }
 
-export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: ChatBotProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: `안녕하세요! ZEUS AI입니다. "${pdfName}" 학습을 도와드리겠습니다. 현재 "${currentChapter}"를 학습 중이시네요. 궁금한 점이 있으시면 질문해주세요!`,
-    },
-  ])
+export function ChatBot({
+  pdfName,
+  currentChapter,
+  currentSection,
+  onClose,
+  embedded = false,
+  learningSourceId,
+  currentUserId,
+}: ChatBotProps) {
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [size, setSize] = useState({ width: 384, height: 500 }) // w-96 = 384px
+  const [size, setSize] = useState({ width: 384, height: 500 }) // w-96 = 384px (floating 모드 전용)
   const [isResizing, setIsResizing] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const chatRef = useRef<HTMLDivElement>(null)
@@ -42,7 +47,72 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
     }
   }, [messages])
 
+  // pdfName / currentChapter / learningSourceId 변경 시, 안내 메시지 + 이전 채팅 내역을 불러온다.
   useEffect(() => {
+    const safeChapter = currentChapter || pdfName
+    const greeting: Message = {
+      id: "greeting-1",
+      role: "assistant",
+      content: `안녕하세요! ZEUS AI입니다. "${pdfName}" 학습을 도와드리겠습니다. 현재 "${safeChapter}"를 학습 중이시네요. 궁금한 점이 있으시면 질문해주세요!`,
+    }
+
+    const loadHistory = async () => {
+      const userId = currentUserId ?? 1
+
+      // learningSourceId가 없으면 서버 기록 없이 기본 인사만 보여준다.
+      if (!learningSourceId) {
+        setMessages([greeting])
+        return
+      }
+
+      try {
+        const res: any = await apiFetch(
+          `/api/learning-sources/${learningSourceId}/chat?currentUserId=${userId}&size=50`,
+          {
+            method: "GET",
+          },
+        )
+
+        const data = (res as any)?.data ?? res
+        const rawItems: any[] =
+          data?.content ?? data?.chats ?? data?.messages ?? []
+
+        // 서버는 id DESC 정렬로 내려주므로, 오래된 것부터 보이도록 역순 정렬
+        const items = [...rawItems].reverse()
+
+        const history: Message[] = items
+          .map((item: any, idx: number) => {
+            const rawRole = item.role ?? item.sender ?? item.senderType ?? item.from
+            const role: "user" | "assistant" =
+              rawRole && String(rawRole).toLowerCase().includes("user")
+                ? "user"
+                : "assistant"
+
+            const content = item.content ?? item.message ?? item.text
+            if (!content) return null
+
+            return {
+              id: String(item.id ?? item.chatId ?? `srv-${idx}`),
+              role,
+              content,
+            }
+          })
+          .filter((m): m is Message => !!m)
+
+        setMessages([greeting, ...history])
+      } catch (error) {
+        console.error("Failed to load chat history", error)
+        // 실패 시에도 최소한 인사 메시지는 보여준다.
+        setMessages([greeting])
+      }
+    }
+
+    loadHistory()
+  }, [pdfName, currentChapter, learningSourceId, currentUserId])
+
+  useEffect(() => {
+    if (embedded) return
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing || !chatRef.current) return
 
@@ -67,14 +137,15 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [isResizing])
+  }, [embedded, isResizing])
 
   const handleResizeStart = (e: React.MouseEvent) => {
+    if (embedded) return
     e.preventDefault()
     setIsResizing(true)
   }
 
-  const suggestedQuestions = ["이 챕터에서 가장 중요한 개념은?", "이 부분을 예시로 설명해줘", "핵심 포인트를 요약해줘"]
+  // 추천 질문은 초기 버전에서만 사용했고 현재는 가이드를 통해 사용법을 안내합니다.
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -89,17 +160,85 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
     setInput("")
     setIsLoading(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const userId = currentUserId ?? 1
 
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: generateMockResponse(input),
-      reference: `${currentChapter} > ${currentSection || "개요"}`,
+    // 서버 연동: learningSourceId가 있으면 서버에 메시지를 보내고, 없으면 기존 mock 응답 사용
+    if (learningSourceId) {
+      try {
+        const res: any = await apiFetch(`/api/learning-sources/${learningSourceId}/chat?currentUserId=${userId}`, {
+          method: "POST",
+          body: JSON.stringify({ content: input }),
+        })
+
+        // 서버 응답 형태를 최대한 유연하게 처리
+        //
+        // 백엔드 DTO:
+        // ChatSendResponse {
+        //   userChatId,
+        //   assistantChatId,
+        //   assistantContent,
+        //   sources: [{ source, page }]
+        // }
+        //
+        // 예상 응답 예시:
+        // { code, message, data: { userChatId, assistantChatId, assistantContent, sources: [...] } }
+        const root = (res as any) ?? {}
+        const envelope = root.data ?? root
+        const payload = envelope.data ?? envelope
+
+        const replyContent =
+          payload?.assistantContent ??
+          payload?.assistantMessage?.content ??
+          payload?.content ??
+          payload?.answer ??
+          generateMockResponse(input)
+
+        // 백엔드에서 내려주는 참조 정보(sources)가 있으면 첫 번째 것을 참조로 붙인다.
+        let reference: string | undefined = undefined
+        const sources = payload?.sources as Array<{ source?: string; page?: number }> | undefined
+        if (Array.isArray(sources) && sources.length > 0) {
+          const first = sources[0]
+          if (first?.source) {
+            reference = first.page
+              ? `${first.source} p.${first.page}`
+              : first.source
+          }
+        }
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: replyContent,
+          reference: reference ?? `${currentChapter} > ${currentSection || "개요"}`,
+        }
+
+        setMessages((prev) => [...prev, assistantMessage])
+      } catch (error) {
+        console.error("Failed to send chat to server, falling back to local response", error)
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: generateMockResponse(input),
+          reference: `${currentChapter} > ${currentSection || "개요"}`,
+        }
+        setMessages((prev) => [...prev, assistantMessage])
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      // 서버 연동 정보가 없으면 기존 mock 응답 사용
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: generateMockResponse(input),
+        reference: `${currentChapter} > ${currentSection || "개요"}`,
+      }
+
+      setMessages((prev) => [...prev, assistantMessage])
+      setIsLoading(false)
     }
-
-    setMessages((prev) => [...prev, assistantMessage])
-    setIsLoading(false)
   }
 
   const generateMockResponse = (question: string): string => {
@@ -119,20 +258,111 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
     setInput(question)
   }
 
+  const containerClasses = embedded
+    ? "flex flex-col h-[520px]"
+    : "fixed bottom-24 right-6 glass border border-border/50 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-scale-in"
+
+  const containerStyle = embedded
+    ? undefined
+    : { width: `${size.width}px`, height: `${size.height}px` }
+
+  // 메시지 내 URL을 자동으로 하이퍼링크로 변환
+  const renderMessageContent = (content: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+
+    return content.split("\n").map((line, lineIdx) => {
+      const parts: React.ReactNode[] = []
+      let lastIndex = 0
+      const matches = [...line.matchAll(urlRegex)]
+
+      matches.forEach((match, idx) => {
+        const url = match[0]
+        const start = match.index ?? 0
+
+        if (start > lastIndex) {
+          parts.push(
+            <span key={`text-${lineIdx}-${idx}`} className="whitespace-pre-wrap">
+              {line.slice(lastIndex, start)}
+            </span>,
+          )
+        }
+
+        parts.push(
+          <a
+            key={`link-${lineIdx}-${idx}`}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-blue-500 hover:text-blue-600 break-all"
+          >
+            {url}
+          </a>,
+        )
+
+        lastIndex = start + url.length
+      })
+
+      if (lastIndex < line.length) {
+        parts.push(
+          <span key={`text-tail-${lineIdx}`} className="whitespace-pre-wrap">
+            {line.slice(lastIndex)}
+          </span>,
+        )
+      }
+
+      // 마지막 줄이 아니면 줄바꿈 추가
+      return (
+        <span key={`line-${lineIdx}`}>
+          {parts}
+          {lineIdx < content.split("\n").length - 1 && <br />}
+        </span>
+      )
+    })
+  }
+
+  // 유튜브 링크에서 videoId 추출
+  const extractYouTubeVideoId = (url: string): string | null => {
+    try {
+      const parsed = new URL(url)
+      if (parsed.hostname === "youtu.be") {
+        return parsed.pathname.slice(1) || null
+      }
+      if (parsed.hostname === "www.youtube.com" || parsed.hostname === "youtube.com") {
+        const v = parsed.searchParams.get("v")
+        if (v) return v
+        // /embed/{id} 같은 형식도 대응
+        const parts = parsed.pathname.split("/")
+        const embedIndex = parts.findIndex((p) => p === "embed")
+        if (embedIndex >= 0 && parts[embedIndex + 1]) {
+          return parts[embedIndex + 1]
+        }
+      }
+    } catch {
+      return null
+    }
+    return null
+  }
+
+  const getYouTubeVideoIds = (content: string): string[] => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const matches = content.match(urlRegex) ?? []
+    const ids = matches
+      .map((url) => extractYouTubeVideoId(url))
+      .filter((id): id is string => !!id)
+
+    // 중복 제거
+    return Array.from(new Set(ids))
+  }
+
   return (
-    <div
-      ref={chatRef}
-      className="fixed bottom-24 right-6 glass border border-border/50 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-scale-in"
-      style={{ width: `${size.width}px`, height: `${size.height}px` }}
-    >
+    <div ref={chatRef} className={containerClasses} style={containerStyle}>
       <div className="flex items-center justify-between p-4 border-b border-border/50 glass-primary">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full icon-gradient flex items-center justify-center shadow-primary">
             <Zap className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-foreground">ZEUS AI 학습 도우미</h3>
-            <p className="text-xs text-muted-foreground truncate max-w-[200px]">{currentChapter}</p>
+            <h3 className="font-semibold text-sm text-foreground">ZEUS AI 학습 Agent</h3>
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-secondary">
@@ -140,8 +370,21 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <div className="flex-1 p-4 overflow-y-auto" ref={scrollRef}>
         <div className="space-y-4">
+          {/* 상단 가이드 영역 */}
+          <div className="text-[11px] text-muted-foreground bg-secondary/40 border border-border/60 rounded-lg p-3 leading-relaxed">
+            <p className="font-semibold text-foreground mb-1">
+              AI 학습 Agent에게 <span className="underline">교재 전체 범위에 대해 질문</span>할 수 있습니다.
+            </p>
+            <p className="font-medium text-foreground mb-1">학습 Agent 사용 가이드</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>어려운 개념이나 막히는 부분이 있다면 언제든지 학습 Agent에게 질문하세요.</li>
+              <li>Agent는 사용자의 이해도가 부족하다고 판단되면 이해를 돕는 유튜브 영상 등 추가 학습 자료를 추천합니다.</li>
+              <li>충분히 이해했다고 판단되면 관련 개념을 복습할 수 있도록 간단한 퀴즈를 제시합니다.</li>
+              <li>현재 챕터뿐만 아니라 교재 전체 범위에 대한 요약, 개념 정리, 학습 전략도 자유롭게 요청할 수 있습니다.</li>
+            </ul>
+          </div>
           {messages.map((message) => (
             <div
               key={message.id}
@@ -158,7 +401,28 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
                   message.role === "user" ? "btn-gradient text-white shadow-primary" : "bg-secondary text-foreground shadow-sm",
                 )}
               >
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <div className="whitespace-pre-wrap">{renderMessageContent(message.content)}</div>
+                {/* 유튜브 링크가 포함된 경우, 임베드 플레이어 표시 (assistant 메세지 한정) */}
+                {message.role === "assistant" && getYouTubeVideoIds(message.content).length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {getYouTubeVideoIds(message.content).map((videoId) => (
+                      <div
+                        key={videoId}
+                        className="rounded-lg overflow-hidden border border-border bg-black/90"
+                      >
+                        <div className="relative pt-[56.25%]">
+                          <iframe
+                            className="absolute inset-0 w-full h-full"
+                            src={`https://www.youtube.com/embed/${videoId}`}
+                            title="YouTube video player"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {message.reference && (
                   <div
                     className={cn(
@@ -195,24 +459,7 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
             </div>
           )}
         </div>
-      </ScrollArea>
-
-      {messages.length <= 2 && (
-        <div className="px-4 pb-2">
-          <p className="text-xs text-muted-foreground mb-2">추천 질문</p>
-          <div className="flex flex-wrap gap-1">
-            {suggestedQuestions.map((q, i) => (
-              <button
-                key={i}
-                onClick={() => handleSuggestedQuestion(q)}
-                className="text-xs px-2.5 py-1.5 rounded-full glass-subtle hover:bg-primary/10 hover:text-primary text-foreground hover-scale transition-smooth shadow-sm"
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      </div>
 
       <div className="p-4 border-t border-border">
         <form
@@ -240,17 +487,19 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
         </form>
       </div>
 
-      {/* Resize Handle */}
-      <div
-        onMouseDown={handleResizeStart}
-        className={cn(
-          "absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center cursor-nw-resize transition-colors group",
-          isResizing && "bg-primary/30",
-        )}
-        title="드래그하여 크기 조절"
-      >
-        <Maximize2 className="h-3 w-3 text-primary group-hover:scale-110 transition-transform" />
-      </div>
+      {/* Resize Handle (플로팅 모드에서만 표시) */}
+      {!embedded && (
+        <div
+          onMouseDown={handleResizeStart}
+          className={cn(
+            "absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center cursor-nw-resize transition-colors group",
+            isResizing && "bg-primary/30",
+          )}
+          title="드래그하여 크기 조절"
+        >
+          <Maximize2 className="h-3 w-3 text-primary group-hover:scale-110 transition-transform" />
+        </div>
+      )}
     </div>
   )
 }

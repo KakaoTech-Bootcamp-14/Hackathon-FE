@@ -9,14 +9,17 @@ import { PdfUploadModal } from "@/components/pdf-upload-modal"
 import { PdfDetailView } from "@/components/pdf-detail-view"
 import { CelebrationPage } from "@/components/celebration-page"
 import { IncompletePage } from "@/components/incomplete-page"
+import { fetchHomeData, type HomeData } from "@/lib/api/home"
 
 export type StudyPlan = {
   id: string
+  learningSourceId?: number
   pdfName: string
   chapters: Chapter[]
   dueDate: string
   dailyHours: number
-  includeWeekends: boolean
+  /** true이면 주말을 제외하고 학습 (서버로도 이렇게 내려감) */
+  excludeWeekends: boolean
   excludedDates: string[]
   totalProgress: number
 }
@@ -27,7 +30,6 @@ export type Chapter = {
   sections: Section[]
   scheduledDate: string
   completed: boolean
-  estimatedMinutes: number
 }
 
 export type Section = {
@@ -41,120 +43,110 @@ export type Section = {
 
 type AppView = "splash" | "login" | "signup" | "home" | "pdf-detail" | "celebration" | "incomplete"
 
+const SESSION_KEY = "zeus-auth-session"
+
+function mapHomeDataToStudyPlans(data: HomeData): StudyPlan[] {
+  const plans: StudyPlan[] = []
+
+  data.learningSourceResponseDtos.forEach((source, sourceIndex) => {
+    const chapters: Chapter[] = []
+
+    source.chapterInfoDtos.forEach((chapterDto, chapterIndex) => {
+      const tasks = chapterDto.taskInfoDtos || []
+      if (!tasks.length) return
+
+      // 해당 챕터의 학습 날짜는 task들 중 가장 이른 날짜로 설정
+      const earliestDate = tasks
+        .map((t) => new Date(t.studyDate))
+        .reduce((min: Date, d: Date) => (d < min ? d : min), new Date(tasks[0].studyDate))
+
+      const scheduledDate = earliestDate.toISOString().split("T")[0]
+
+      const sections: Section[] = tasks.map((task, taskIndex) => ({
+        id: `task-${task.taskId ?? `${chapterIndex}-${taskIndex}`}`,
+        title: task.taskTitle,
+        content: "",
+        keyPoints: [],
+        definitions: [],
+        completed: task.taskStatus === "DONE",
+      }))
+
+      chapters.push({
+        id: `chapter-${chapterDto.chapterId ?? chapterIndex}`,
+        title: chapterDto.chapterTitle,
+        sections,
+        scheduledDate,
+        completed: false,
+      })
+    })
+
+    const allDates = chapters.map((ch) => new Date(ch.scheduledDate))
+    const maxDate = allDates.length > 0 ? new Date(Math.max(...allDates.map((d) => d.getTime()))) : new Date()
+    const dueDateStr = maxDate.toISOString().split("T")[0]
+
+    plans.push({
+      id: `plan-${sourceIndex + 1}`,
+      learningSourceId: source.learningSourceId,
+      pdfName: source.learningSourceTitle,
+      chapters,
+      dueDate: dueDateStr,
+      dailyHours: 2,
+      excludeWeekends: false,
+      excludedDates: [],
+      totalProgress: 0,
+    })
+  })
+
+  return plans
+}
+
 export default function Home() {
   const [currentView, setCurrentView] = useState<AppView>("splash")
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<StudyPlan | null>(null)
-  const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([
-    {
-      id: "1",
-      pdfName: "머신러닝 기초",
-      totalProgress: 35,
-      dueDate: "2025-01-15",
-      dailyHours: 2,
-      includeWeekends: false,
-      excludedDates: [],
-      chapters: [
-        {
-          id: "c1",
-          title: "Chapter 1. 머신러닝 개요",
-          scheduledDate: "2024-12-17",
-          completed: true,
-          estimatedMinutes: 45,
-          sections: [
-            {
-              id: "s1",
-              title: "1.1 머신러닝이란?",
-              content:
-                "머신러닝은 컴퓨터가 명시적으로 프로그래밍되지 않고도 데이터로부터 학습하여 예측이나 결정을 내릴 수 있게 하는 인공지능의 한 분야입니다.",
-              keyPoints: ["데이터 기반 학습", "패턴 인식", "예측 모델링"],
-              definitions: ["지도학습: 레이블이 있는 데이터로 학습", "비지도학습: 레이블 없이 패턴 발견"],
-              completed: true,
-            },
-            {
-              id: "s2",
-              title: "1.2 머신러닝의 종류",
-              content: "머신러닝은 크게 지도학습, 비지도학습, 강화학습으로 나뉩니다.",
-              keyPoints: ["지도학습 vs 비지도학습", "강화학습의 특징"],
-              definitions: ["강화학습: 보상을 통해 행동 학습"],
-              completed: true,
-            },
-          ],
-        },
-        {
-          id: "c2",
-          title: "Chapter 2. 선형 회귀",
-          scheduledDate: "2024-12-18",
-          completed: false,
-          estimatedMinutes: 60,
-          sections: [
-            {
-              id: "s3",
-              title: "2.1 선형 회귀 기초",
-              content:
-                "선형 회귀는 독립 변수와 종속 변수 간의 선형 관계를 모델링하는 가장 기본적인 예측 알고리즘입니다.",
-              keyPoints: ["최소제곱법", "가설 함수", "비용 함수"],
-              definitions: ["가설 함수: h(x) = θ₀ + θ₁x", "비용 함수: J(θ) = 1/2m Σ(h(x) - y)²"],
-              completed: false,
-            },
-            {
-              id: "s4",
-              title: "2.2 경사 하강법",
-              content:
-                "경사 하강법은 비용 함수를 최소화하기 위해 파라미터를 반복적으로 조정하는 최적화 알고리즘입니다.",
-              keyPoints: ["학습률의 중요성", "수렴 조건", "배치 vs 확률적 경사 하강법"],
-              definitions: ["학습률(α): 파라미터 업데이트 크기 조절"],
-              completed: false,
-            },
-          ],
-        },
-        {
-          id: "c3",
-          title: "Chapter 3. 분류 알고리즘",
-          scheduledDate: "2024-12-19",
-          completed: false,
-          estimatedMinutes: 75,
-          sections: [
-            {
-              id: "s5",
-              title: "3.1 로지스틱 회귀",
-              content: "로지스틱 회귀는 이진 분류 문제를 해결하기 위한 알고리즘으로, 시그모이드 함수를 사용합니다.",
-              keyPoints: ["시그모이드 함수", "결정 경계", "다중 클래스 분류"],
-              definitions: ["시그모이드: σ(z) = 1/(1+e⁻ᶻ)"],
-              completed: false,
-            },
-          ],
-        },
-        {
-          id: "c4",
-          title: "Chapter 4. 신경망 기초",
-          scheduledDate: "2024-12-20",
-          completed: false,
-          estimatedMinutes: 90,
-          sections: [
-            {
-              id: "s6",
-              title: "4.1 퍼셉트론",
-              content:
-                "퍼셉트론은 인공 신경망의 가장 기본적인 형태로, 입력과 가중치의 선형 결합에 활성화 함수를 적용합니다.",
-              keyPoints: ["활성화 함수", "가중치 업데이트", "XOR 문제"],
-              definitions: ["퍼셉트론: y = f(Σwᵢxᵢ + b)"],
-              completed: false,
-            },
-          ],
-        },
-      ],
-    },
-  ])
+  const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([])
+  const [homeLoaded, setHomeLoaded] = useState(false)
+  const [homeError, setHomeError] = useState<string | null>(null)
 
+  // 최초 마운트 시 저장된 세션 여부에 따라 초기 화면 결정
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const hasSession = sessionStorage.getItem(SESSION_KEY) === "true"
+    if (hasSession) {
+      setCurrentView("home")
+    }
+  }, [])
+
+  // 스플래시 → 로그인/홈 전환
   useEffect(() => {
     if (currentView === "splash") {
       const timer = setTimeout(() => {
-        setCurrentView("login")
+        const hasSession = typeof window !== "undefined" && sessionStorage.getItem(SESSION_KEY) === "true"
+        setCurrentView(hasSession ? "home" : "login")
       }, 2500)
       return () => clearTimeout(timer)
     }
   }, [currentView])
+
+  useEffect(() => {
+    if (currentView !== "home" || homeLoaded) return
+
+    const load = async () => {
+      try {
+        const res = await fetchHomeData()
+        const plans = mapHomeDataToStudyPlans(res.data)
+        setStudyPlans(plans)
+        setHomeError(null)
+      } catch (error: any) {
+        console.error("Failed to load home data", error)
+        setHomeError("홈 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.")
+      } finally {
+        setHomeLoaded(true)
+      }
+    }
+
+    load()
+  }, [currentView, homeLoaded])
 
   const handlePlanCreated = (newPlan: StudyPlan) => {
     setStudyPlans([...studyPlans, newPlan])
@@ -202,12 +194,25 @@ export default function Home() {
     }
   }
 
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(SESSION_KEY)
+    }
+    setSelectedPlan(null)
+    setStudyPlans([])
+    setCurrentView("login")
+  }
+
   const handleLogin = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(SESSION_KEY, "true")
+    }
     setCurrentView("home")
   }
 
   const handleSignUp = () => {
-    setCurrentView("home")
+    // 회원가입 후에는 세션을 만들지 않고 로그인 화면으로 이동
+    setCurrentView("login")
   }
 
   if (currentView === "splash") {
@@ -216,7 +221,7 @@ export default function Home() {
 
   if (currentView === "login") {
     return (
-      <LoginPage onLogin={handleLogin} onCreateAccount={() => setCurrentView("signup")} onForgotPassword={() => {}} />
+      <LoginPage onLogin={handleLogin} onCreateAccount={() => setCurrentView("signup")} />
     )
   }
 
@@ -247,6 +252,7 @@ export default function Home() {
           onViewPdf={handleViewPdf}
           onUpdatePlans={setStudyPlans}
           onDeletePlan={handleDeletePlan}
+          onLogout={handleLogout}
         />
       ) : selectedPlan ? (
         <PdfDetailView plan={selectedPlan} onBack={() => setCurrentView("home")} onUpdatePlan={handlePlanUpdate} />
