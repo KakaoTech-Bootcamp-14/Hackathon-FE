@@ -342,15 +342,14 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   }
 
   const handleReplan = async () => {
-    if (!replanTargetPlan || !replanTargetPlan.learningSourceId) {
-      alert("학습 자료 ID가 없습니다.")
+    if (!replanTargetPlan) {
+      alert("재생성할 학습 자료를 찾을 수 없습니다.")
       return
     }
 
     try {
       setReplanLoading(true)
       const request = {
-        learningSourceId: replanTargetPlan.learningSourceId,
         learningSourceTitle: replanTargetPlan.pdfName,
         startDate: replanSettings.startDate,
         endDate: replanSettings.dueDate,
