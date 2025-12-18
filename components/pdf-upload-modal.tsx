@@ -234,18 +234,13 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="pdfName" className="flex items-center gap-2 text-sm">
+                <Label className="flex items-center gap-2 text-sm">
                   <FileText className="h-4 w-4 text-muted-foreground" />
                   학습자료 이름
                 </Label>
-                <Input
-                  id="pdfName"
-                  type="text"
-                  value={pdfName}
-                  onChange={(e) => setPdfName(e.target.value)}
-                  placeholder="학습자료 이름을 입력하세요"
-                  className="bg-background"
-                />
+                <div className="px-3 py-2 rounded-md border border-border bg-secondary/30 text-sm text-foreground">
+                  {pdfName || "새 학습 자료"}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="startDate" className="flex items-center gap-2 text-sm">
