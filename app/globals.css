@@ -16,24 +16,24 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 265);
 
-  /* 프라이머리: vibrant electric blue-purple (생동감 있고 현대적인) */
-  --primary: oklch(0.60 0.25 265);
+  /* 프라이머리: 더 밝고 생동감 있는 보라-파랑 */
+  --primary: oklch(0.65 0.28 270);
   --primary-foreground: oklch(1 0 0);
 
-  /* 프라이머리 그라디언트용 추가 색상 - 더 강렬한 그라디언트 */
-  --primary-from: oklch(0.58 0.28 275);
-  --primary-to: oklch(0.65 0.22 250);
+  /* 프라이머리 그라디언트용 - 부드럽고 자연스러운 전환 */
+  --primary-from: oklch(0.62 0.30 280);
+  --primary-to: oklch(0.68 0.26 255);
 
-  /* 다채로운 액센트 컬러 - 다이나믹한 UI를 위한 멀티 컬러 */
-  --accent-purple: oklch(0.65 0.25 300);
+  /* 다채로운 액센트 컬러 - 더 조화롭고 생동감 있게 */
+  --accent-purple: oklch(0.68 0.28 295);
   --accent-purple-foreground: oklch(1 0 0);
-  --accent-cyan: oklch(0.70 0.15 200);
+  --accent-cyan: oklch(0.72 0.18 205);
   --accent-cyan-foreground: oklch(0.15 0.02 265);
-  --accent-pink: oklch(0.68 0.23 340);
+  --accent-pink: oklch(0.70 0.26 345);
   --accent-pink-foreground: oklch(1 0 0);
-  --accent-orange: oklch(0.70 0.18 45);
+  --accent-orange: oklch(0.72 0.20 50);
   --accent-orange-foreground: oklch(0.15 0.02 45);
-  --accent-green: oklch(0.68 0.18 145);
+  --accent-green: oklch(0.70 0.20 150);
   --accent-green-foreground: oklch(0.15 0.02 145);
 
   /* 세컨더리: 더 눈에 띄는 secondary */
@@ -65,8 +65,12 @@
   --chart-4: oklch(0.65 0.1 145);
   --chart-5: oklch(0.55 0.12 200);
 
-  /* 약간 더 작은 radius - clean, modern */
-  --radius: 0.5rem;
+  /* 귀여운 느낌을 위한 더 큰 radius - soft, friendly */
+  --radius: 1rem;
+
+  /* 카카오톡 느낌의 노란색 악센트 */
+  --kakao-yellow: oklch(0.88 0.16 90);
+  --kakao-yellow-foreground: oklch(0.25 0.02 90);
 
   /* 사이드바 */
   --sidebar: oklch(0.995 0.002 265);
@@ -86,19 +90,19 @@
   --card-foreground: oklch(0.95 0.005 265);
   --popover: oklch(0.18 0.012 265);
   --popover-foreground: oklch(0.95 0.005 265);
-  --primary: oklch(0.70 0.25 265);
+  --primary: oklch(0.72 0.28 270);
   --primary-foreground: oklch(0.15 0.01 265);
-  --primary-from: oklch(0.68 0.28 275);
-  --primary-to: oklch(0.72 0.22 250);
-  --accent-purple: oklch(0.70 0.25 300);
+  --primary-from: oklch(0.70 0.30 280);
+  --primary-to: oklch(0.74 0.26 255);
+  --accent-purple: oklch(0.72 0.28 295);
   --accent-purple-foreground: oklch(0.15 0.01 265);
-  --accent-cyan: oklch(0.75 0.15 200);
+  --accent-cyan: oklch(0.76 0.18 205);
   --accent-cyan-foreground: oklch(0.15 0.01 265);
-  --accent-pink: oklch(0.72 0.23 340);
+  --accent-pink: oklch(0.74 0.26 345);
   --accent-pink-foreground: oklch(0.15 0.01 265);
-  --accent-orange: oklch(0.75 0.18 45);
+  --accent-orange: oklch(0.76 0.20 50);
   --accent-orange-foreground: oklch(0.15 0.01 265);
-  --accent-green: oklch(0.72 0.18 145);
+  --accent-green: oklch(0.74 0.20 150);
   --accent-green-foreground: oklch(0.15 0.01 265);
   --secondary: oklch(0.22 0.012 265);
   --secondary-foreground: oklch(0.95 0.005 265);
@@ -167,6 +171,10 @@
   --color-primary-from: var(--primary-from);
   --color-primary-to: var(--primary-to);
 
+  /* 카카오 악센트 */
+  --color-kakao-yellow: var(--kakao-yellow);
+  --color-kakao-yellow-foreground: var(--kakao-yellow-foreground);
+
   /* 액센트 컬러 */
   --color-accent-purple: var(--accent-purple);
   --color-accent-purple-foreground: var(--accent-purple-foreground);
@@ -193,23 +201,23 @@
 
 /* === GRADIENT SYSTEM === */
 
-/* Primary Gradients */
+/* Primary Gradients - 더 부드럽고 생동감 있게 */
 .btn-gradient {
   background: linear-gradient(135deg,
-    oklch(0.58 0.28 275),
-    oklch(0.65 0.22 250)
+    oklch(0.62 0.30 280),
+    oklch(0.68 0.26 255)
   );
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-gradient:hover {
   background: linear-gradient(135deg,
-    oklch(0.62 0.30 280),
-    oklch(0.68 0.24 245)
+    oklch(0.66 0.32 285),
+    oklch(0.72 0.28 250)
   );
   box-shadow:
-    0 8px 16px oklch(0.60 0.25 265 / 0.25),
-    0 0 32px oklch(0.60 0.25 265 / 0.15);
+    0 8px 16px oklch(0.65 0.28 270 / 0.25),
+    0 0 32px oklch(0.65 0.28 270 / 0.15);
   transform: translateY(-1px);
 }
 
@@ -219,50 +227,50 @@
 
 .icon-gradient {
   background: linear-gradient(145deg,
-    oklch(0.58 0.28 275),
-    oklch(0.65 0.22 250)
+    oklch(0.62 0.30 280),
+    oklch(0.68 0.26 255)
   );
 }
 
-/* Multi-color Gradients for Variety */
+/* Multi-color Gradients - 더 조화롭고 생동감 있게 */
 .gradient-purple-pink {
   background: linear-gradient(135deg,
-    oklch(0.65 0.25 300),
-    oklch(0.68 0.23 340)
+    oklch(0.68 0.28 295),
+    oklch(0.70 0.26 345)
   );
 }
 
 .gradient-cyan-blue {
   background: linear-gradient(135deg,
-    oklch(0.70 0.15 200),
-    oklch(0.65 0.22 250)
+    oklch(0.72 0.18 205),
+    oklch(0.68 0.26 255)
   );
 }
 
 .gradient-orange-pink {
   background: linear-gradient(135deg,
-    oklch(0.70 0.18 45),
-    oklch(0.68 0.23 340)
+    oklch(0.72 0.20 50),
+    oklch(0.70 0.26 345)
   );
 }
 
-/* Mesh Gradients for Backgrounds */
+/* Mesh Gradients for Backgrounds - 더 부드럽고 조화로운 색상 */
 .gradient-mesh {
   background:
-    radial-gradient(at 0% 0%, oklch(0.65 0.25 300 / 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, oklch(0.70 0.15 200 / 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, oklch(0.68 0.23 340 / 0.08) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, oklch(0.65 0.22 250 / 0.08) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, oklch(0.68 0.28 295 / 0.10) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, oklch(0.72 0.18 205 / 0.10) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, oklch(0.70 0.26 345 / 0.10) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, oklch(0.68 0.26 255 / 0.10) 0px, transparent 50%);
 }
 
-/* Animated Gradient */
+/* Animated Gradient - 더 생동감 있는 색상 전환 */
 .gradient-animated {
   background: linear-gradient(
     135deg,
-    oklch(0.58 0.28 275),
-    oklch(0.65 0.22 250),
-    oklch(0.70 0.15 200),
-    oklch(0.65 0.25 300)
+    oklch(0.62 0.30 280),
+    oklch(0.68 0.26 255),
+    oklch(0.72 0.18 205),
+    oklch(0.68 0.28 295)
   );
   background-size: 300% 300%;
   animation: gradient-shift 8s ease infinite;
@@ -273,24 +281,43 @@
   50% { background-position: 100% 50%; }
 }
 
+/* === KAKAO-STYLE UTILITIES === */
+
+/* 카카오톡 스타일 말풍선 */
+.kakao-bubble {
+  background: oklch(0.88 0.16 90);
+  border-radius: 1.25rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 8px oklch(0.88 0.16 90 / 0.2);
+}
+
+.kakao-bubble-soft {
+  background: linear-gradient(135deg, oklch(0.97 0.01 265), oklch(0.95 0.008 265));
+  border-radius: 1.5rem;
+  padding: 1rem 1.25rem;
+  box-shadow:
+    0 2px 8px oklch(0 0 0 / 0.04),
+    0 1px 3px oklch(0 0 0 / 0.06);
+}
+
 /* === SHADOW SYSTEM === */
 
-/* Base Shadows - Neutral Gray */
+/* Base Shadows - Softer for cuter feel */
 .shadow-xs {
   box-shadow:
-    0 1px 2px oklch(0 0 0 / 0.05);
+    0 1px 3px oklch(0 0 0 / 0.04);
 }
 
 .shadow-sm {
   box-shadow:
-    0 1px 3px oklch(0 0 0 / 0.08),
-    0 1px 2px oklch(0 0 0 / 0.04);
+    0 2px 4px oklch(0 0 0 / 0.06),
+    0 1px 2px oklch(0 0 0 / 0.03);
 }
 
 .shadow-md {
   box-shadow:
-    0 4px 6px -1px oklch(0 0 0 / 0.08),
-    0 2px 4px -1px oklch(0 0 0 / 0.04);
+    0 4px 8px -1px oklch(0 0 0 / 0.06),
+    0 2px 4px -1px oklch(0 0 0 / 0.03);
 }
 
 .shadow-lg {
@@ -311,11 +338,17 @@
     0 12px 20px -8px oklch(0 0 0 / 0.06);
 }
 
-/* Colored Shadows - for emphasis */
+/* Colored Shadows - softer for cute feel */
 .shadow-primary {
   box-shadow:
-    0 8px 16px -4px oklch(0.60 0.25 265 / 0.2),
-    0 4px 8px -2px oklch(0.60 0.25 265 / 0.12);
+    0 6px 12px -3px oklch(0.60 0.25 265 / 0.15),
+    0 3px 6px -2px oklch(0.60 0.25 265 / 0.08);
+}
+
+.shadow-kakao {
+  box-shadow:
+    0 6px 12px -3px oklch(0.88 0.16 90 / 0.25),
+    0 3px 6px -2px oklch(0.88 0.16 90 / 0.15);
 }
 
 .shadow-primary-lg {
@@ -547,21 +580,21 @@
   animation: pulse-soft 2s ease-in-out infinite;
 }
 
-/* Hover Animations */
+/* Hover Animations - more playful */
 .hover-lift {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .hover-lift:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.01);
 }
 
 .hover-scale {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .hover-scale:hover {
-  transform: scale(1.02);
+  transform: scale(1.05);
 }
 
 .hover-glow {
@@ -609,17 +642,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 1.875rem; /* 30px -> 더 작게 */
   font-weight: 700;
 }
 
 h2 {
-  font-size: 2rem;
+  font-size: 1.5rem; /* 24px -> 더 작게 */
   font-weight: 600;
 }
 
 h3 {
-  font-size: 1.5rem;
+  font-size: 1.25rem; /* 20px -> 더 작게 */
 }
 
 /* Better body text */
@@ -627,6 +660,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-size: 14px; /* 기본 글꼴 크기 줄이기 */
 }
 
 /* Enhanced text utilities */
