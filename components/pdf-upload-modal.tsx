@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useCallback } from "react"
 import { Upload, Calendar, Clock, Zap, FileText } from "lucide-react"
+import { useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,32 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
   })
   const [generatingProgress, setGeneratingProgress] = useState(0)
   const [generatedPlan, setGeneratedPlan] = useState<StudyPlan | null>(null)
+  const [progressIntervalId, setProgressIntervalId] = useState<ReturnType<typeof setInterval> | null>(null)
+  const [progressStatusText, setProgressStatusText] = useState("PDF 구조 분석 중...")
+
+  // 진행도에 따라 상태 문구 업데이트
+  useEffect(() => {
+    if (generatingProgress < 40) {
+      setProgressStatusText("PDF 구조 분석 중...")
+    } else if (generatingProgress < 65) {
+      setProgressStatusText("챕터 및 섹션 추출 중...")
+    } else if (generatingProgress < 85) {
+      setProgressStatusText("학습 분량 계산 중...")
+    } else if (generatingProgress < 100) {
+      setProgressStatusText("일정 배치 중...")
+    } else {
+      setProgressStatusText("완료!")
+    }
+  }, [generatingProgress])
+
+  // 컴포넌트 언마운트 시 인터벌 정리
+  useEffect(() => {
+    return () => {
+      if (progressIntervalId) {
+        clearInterval(progressIntervalId)
+      }
+    }
+  }, [progressIntervalId])
 
   const isGenerateDisabled =
     !settings.startDate ||
@@ -131,14 +158,28 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
 
     try {
       setStep("generating")
-      setGeneratingProgress(30)
+      setGeneratingProgress(10)
+      if (progressIntervalId) {
+        clearInterval(progressIntervalId)
+      }
+      // 네트워크 응답을 기다리는 동안 체감 진행도를 천천히 올려줌
+      const intervalId = setInterval(() => {
+        setGeneratingProgress((prev) => {
+          if (prev >= 90) return prev
+          const increment = prev < 50 ? 5 : 3
+          return Math.min(prev + increment, 90)
+        })
+      }, 600)
+      setProgressIntervalId(intervalId)
 
       // 백엔드에 학습 스케줄 생성 요청 (멀티파트)
       const response: any = await createSchedule(uploadedFile, requestPayload)
 
-      setGeneratingProgress(80)
+      setGeneratingProgress(95)
+      setProgressStatusText("일정 배치 중...")
 
       const chapterInfoDtos = response?.data?.chapterInfoDtos ?? []
+      const learningSourceId = response?.data?.learningSourceId
       const chaptersFromApi = buildChaptersFromApi(chapterInfoDtos)
 
       if (!chaptersFromApi.length) {
@@ -147,6 +188,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
 
       const generated: StudyPlan = {
         id: Date.now().toString(),
+        learningSourceId: learningSourceId,
         pdfName: pdfName || "새 학습 자료",
         totalProgress: 0,
         dueDate: settings.dueDate,
@@ -156,14 +198,25 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
         chapters: chaptersFromApi,
       }
 
+      if (progressIntervalId) {
+        clearInterval(progressIntervalId)
+        setProgressIntervalId(null)
+      }
+
       setGeneratedPlan(generated)
       setGeneratingProgress(100)
+      setProgressStatusText("완료!")
       setStep("preview")
     } catch (error) {
       console.error("Failed to create schedule", error)
       alert("학습 스케줄 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+      if (progressIntervalId) {
+        clearInterval(progressIntervalId)
+        setProgressIntervalId(null)
+      }
       setStep("settings")
       setGeneratingProgress(0)
+      setProgressStatusText("PDF 구조 분석 중...")
       return
     }
 
@@ -177,11 +230,16 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
   }
 
   const handleClose = () => {
+    if (progressIntervalId) {
+      clearInterval(progressIntervalId)
+      setProgressIntervalId(null)
+    }
     setStep("upload")
     setUploadedFile(null)
     setPdfName("")
     setGeneratingProgress(0)
     setGeneratedPlan(null)
+    setProgressStatusText("PDF 구조 분석 중...")
     setSettings({
       startDate: "",
       dueDate: "",
@@ -364,12 +422,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
                 </div>
                 <Progress value={generatingProgress} className="h-1.5" />
               </div>
-              <div className="text-center text-sm text-muted-foreground">
-                {generatingProgress < 30 && "PDF 구조 분석 중..."}
-                {generatingProgress >= 30 && generatingProgress < 60 && "챕터 및 섹션 추출 중..."}
-                {generatingProgress >= 60 && generatingProgress < 90 && "학습 분량 계산 중..."}
-                {generatingProgress >= 90 && "일정 배치 중..."}
-              </div>
+              <div className="text-center text-sm text-muted-foreground">{progressStatusText}</div>
             </div>
           </>
         )}

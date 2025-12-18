@@ -74,13 +74,15 @@ export async function createSchedule(
 
 
 // 스케줄 재생성: POST /api/schedule/reschedule
-export async function reCreateSchedule(request: {
+type ReCreateScheduleRequest = {
   learningSourceTitle: string
   startDate: string
   endDate: string
   dailyStudyTime: number
   excludeWeekend: boolean
-}) {
+}
+
+export async function reCreateSchedule(request: ReCreateScheduleRequest) {
   if (!BASE_URL) {
     throw new ApiError({
       status: 0,
@@ -133,4 +135,3 @@ export async function reCreateSchedule(request: {
   // DataResponseDto<CreateScheduleResponseDto> 구조를 그대로 반환
   return data as any
 }
-

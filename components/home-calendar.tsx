@@ -51,13 +51,14 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils"
 import { reCreateSchedule } from "@/lib/api/schedule"
 import { updateTaskCompletionStatus } from "@/lib/api/study"
+import { fetchLearningSourceProgress, type ProgressData } from "@/lib/api/progress"
 import { ChatBot } from "@/components/chatbot"
 import type { StudyPlan, Chapter } from "@/app/page"
 
 interface HomeCalendarProps {
   studyPlans: StudyPlan[]
   onAddPdf: () => void
-  onViewPdf: (plan: StudyPlan, openChat?: boolean) => void
+  onViewPdf: (plan: StudyPlan, chapterId?: string) => void
   onUpdatePlans: (plans: StudyPlan[]) => void
   onDeletePlan: (planId: string) => void
   onLogout: () => void
@@ -97,20 +98,70 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
     excludeWeekends: false,
   })
   const [qnaPlan, setQnaPlan] = useState<StudyPlan | null>(null)
+  const [progressMap, setProgressMap] = useState<Map<string, ProgressData>>(new Map())
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  // 서버에서 각 학습 자료의 진도율 가져오기
+  useEffect(() => {
+    const fetchAllProgress = async () => {
+      const newProgressMap = new Map<string, ProgressData>()
+
+      for (const plan of studyPlans) {
+        if (plan.learningSourceId) {
+          try {
+            const response = await fetchLearningSourceProgress(plan.learningSourceId)
+            newProgressMap.set(plan.id, response.data)
+          } catch (error) {
+            console.error(`Failed to fetch progress for plan ${plan.id}`, error)
+          }
+        }
+      }
+
+      setProgressMap(newProgressMap)
+    }
+
+    if (studyPlans.length > 0) {
+      void fetchAllProgress()
+    }
+  }, [studyPlans])
+
   const stats = useMemo(() => {
-    const totalChapters = studyPlans.reduce((acc, plan) => acc + plan.chapters.length, 0)
-    const completedChapters = studyPlans.reduce((acc, plan) => acc + plan.chapters.filter((c) => c.completed).length, 0)
-    const overallProgress = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
+    let totalTasks = 0
+    let doneTasks = 0
+
+    // 서버 진도율이 있으면 사용, 없으면 클라이언트에서 계산
+    progressMap.forEach((progress) => {
+      totalTasks += progress.totalTaskCount
+      doneTasks += progress.doneTaskCount
+    })
+
+    // 진도율이 없으면 기존 방식으로 계산
+    if (totalTasks === 0) {
+      const totalChapters = studyPlans.reduce((acc, plan) => acc + plan.chapters.length, 0)
+      const completedChapters = studyPlans.reduce((acc, plan) => acc + plan.chapters.filter((c) => c.completed).length, 0)
+      const overallProgress = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
+      const remainingDays =
+        studyPlans.length > 0
+          ? Math.max(0, Math.ceil((new Date(studyPlans[0].dueDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
+          : 0
+      return { totalChapters, completedChapters: completedChapters, overallProgress, remainingDays }
+    }
+
+    const overallProgress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
     const remainingDays =
       studyPlans.length > 0
         ? Math.max(0, Math.ceil((new Date(studyPlans[0].dueDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)))
         : 0
-    return { totalChapters, completedChapters, overallProgress, remainingDays }
-  }, [studyPlans, today])
+
+    return {
+      totalChapters: totalTasks,
+      completedChapters: doneTasks,
+      overallProgress,
+      remainingDays
+    }
+  }, [studyPlans, today, progressMap])
 
   // 자료(title) 기준으로는 항상 펼쳐진 상태 유지
   useEffect(() => {
@@ -292,6 +343,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
 
   const handleReplan = async () => {
     if (!replanTargetPlan) {
+      alert("재생성할 학습 자료를 찾을 수 없습니다.")
       return
     }
 
@@ -822,7 +874,17 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h3 className="text-lg font-bold text-foreground truncate">{plan.pdfName}</h3>
-                                <p className="text-xs text-muted-foreground">{chapters.length}개 챕터</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs text-muted-foreground">{chapters.length}개 챕터</p>
+                                  {progressMap.has(plan.id) && (
+                                    <>
+                                      <span className="text-xs text-muted-foreground">•</span>
+                                      <p className="text-xs font-medium text-primary">
+                                        {progressMap.get(plan.id)?.progressRate}%
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                               <ChevronDown
                                 className={cn(
@@ -971,7 +1033,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation()
-                                      onViewPdf(plan)
+                                      onViewPdf(plan, chapter.id)
                                     }}
                                     className="h-8 w-8 rounded-full border border-slate-300/60 bg-white/70 flex items-center justify-center hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm"
                                   >
@@ -1019,17 +1081,6 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                             )}
                           </div>
                         ))}
-
-                        {/* 상세 보기 버튼 */}
-                        <div className="pt-2">
-                          <button
-                            onClick={() => onViewPdf(plan)}
-                            className="w-full py-2.5 px-4 rounded-full text-xs text-slate-500 hover:text-primary transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-indigo-200/50 hover:bg-indigo-50/30 hover:shadow-sm"
-                          >
-                            상세 보기
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
                       </div>
                     </CollapsibleContent>
                   </div>

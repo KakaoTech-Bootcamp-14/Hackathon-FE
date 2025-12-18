@@ -104,6 +104,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<AppView>("splash")
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<StudyPlan | null>(null)
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
   const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([])
   const [homeLoaded, setHomeLoaded] = useState(false)
   const [homeError, setHomeError] = useState<string | null>(null)
@@ -179,9 +180,18 @@ export default function Home() {
     load()
   }, [currentView, homeLoaded])
 
-  const handlePlanCreated = (newPlan: StudyPlan) => {
+  const handlePlanCreated = async (newPlan: StudyPlan) => {
     setStudyPlans([...studyPlans, newPlan])
     setShowUploadModal(false)
+
+    // PDF 생성 후 홈 데이터를 다시 불러와서 실제 learningSourceId 반영
+    try {
+      const res = await fetchHomeData()
+      const plans = mapHomeDataToStudyPlans(res.data)
+      setStudyPlans(plans)
+    } catch (error: any) {
+      console.error("Failed to reload home data after plan creation", error)
+    }
   }
 
   const handlePlanUpdate = (updatedPlan: StudyPlan) => {
@@ -212,8 +222,9 @@ export default function Home() {
     }
   }
 
-  const handleViewPdf = (plan: StudyPlan) => {
+  const handleViewPdf = (plan: StudyPlan, chapterId?: string) => {
     setSelectedPlan(plan)
+    setSelectedChapterId(chapterId || null)
     setCurrentView("pdf-detail")
   }
 
@@ -296,7 +307,12 @@ export default function Home() {
           onLogout={handleLogout}
         />
       ) : selectedPlan ? (
-        <PdfDetailView plan={selectedPlan} onBack={() => setCurrentView("home")} onUpdatePlan={handlePlanUpdate} />
+        <PdfDetailView
+          plan={selectedPlan}
+          initialChapterId={selectedChapterId}
+          onBack={() => setCurrentView("home")}
+          onUpdatePlan={handlePlanUpdate}
+        />
       ) : null}
 
       <PdfUploadModal open={showUploadModal} onOpenChange={setShowUploadModal} onPlanCreated={handlePlanCreated} />
