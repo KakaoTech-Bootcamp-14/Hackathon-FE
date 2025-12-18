@@ -1,0 +1,62 @@
+name: KTB 해커톤 ZEUSAI CI 파이프라인
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  test_build:
+    runs-on: ubuntu-22.04
+
+    # 작업을 다양한 환경에서 병렬로 실행할 수 있도록 전략을 정의합니다.
+    strategy:
+      # 병렬 실행을 위한 환경 변수 집합을 설정합니다.
+      matrix:
+        # Node.js 버전 19.x, 20.x, 22.x 환경에서 병렬로 작업을 실행합니다.
+        node-version: [19.x, 20.x, 22.x]
+
+    # 스텝 정의
+    steps:
+      - name: 체크아웃
+        uses: actions/checkout@v2
+
+      - name: 노드 JS 설치
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # 프로젝트의 의존성 패키지들을 설치합니다.
+      - name: 의존성 설치
+        run: npm install
+
+      - name: 테스트 실행
+        run: npm test
+
+      - name: 정적 코드 검사기 실행
+        run:
+
+  notify-discord:
+    runs-on: ubuntu-22.04
+    needs: test_build
+    if: always()
+    steps:
+      - name: Discord 빌드 알림
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_PR_URL }}
+          title: "${{ needs.build.result == 'success' && '✅' || '❌' }} 프런트 새로운 PR이 올라왔습니다!"
+          description: |
+            **제목**: ${{ github.event.pull_request.title }}
+            **작성자**: ${{ github.event.pull_request.user.login }}
+            **브랜치**: `${{ github.event.pull_request.base.ref }}`←`${{ github.event.pull_request.head.ref }}`
+
+            **📊 빌드 결과**:
+            - 상태: ${{ needs.build.result == 'success' && '성공' || '실패' }}
+
+            **🔗 링크**:
+            - [PR 확인하기](${{ github.event.pull_request.html_url }})
+
+          color: "${{ needs.build.result == 'success' && 65280 || 16711680 }}"
+          username: GitHub PR Bot
+          avatar_url: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
