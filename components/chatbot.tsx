@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, X, Zap, User, FileText } from "lucide-react"
+import { Send, X, Zap, User, FileText, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -31,13 +31,48 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [size, setSize] = useState({ width: 384, height: 500 }) // w-96 = 384px
+  const [isResizing, setIsResizing] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const chatRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !chatRef.current) return
+
+      const rect = chatRef.current.getBoundingClientRect()
+      // 왼쪽 위 핸들: 마우스를 왼쪽으로 = width 증가, 위로 = height 증가
+      const newWidth = Math.max(320, Math.min(800, rect.right - e.clientX))
+      const newHeight = Math.max(400, Math.min(800, rect.bottom - e.clientY))
+
+      setSize({ width: newWidth, height: newHeight })
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    if (isResizing) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isResizing])
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }
 
   const suggestedQuestions = ["이 챕터에서 가장 중요한 개념은?", "이 부분을 예시로 설명해줘", "핵심 포인트를 요약해줘"]
 
@@ -85,7 +120,11 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
   }
 
   return (
-    <div className="fixed bottom-24 right-6 w-96 h-[500px] glass border border-border/50 rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden animate-scale-in">
+    <div
+      ref={chatRef}
+      className="fixed bottom-24 right-6 glass border border-border/50 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-scale-in"
+      style={{ width: `${size.width}px`, height: `${size.height}px` }}
+    >
       <div className="flex items-center justify-between p-4 border-b border-border/50 glass-primary">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full icon-gradient flex items-center justify-center shadow-primary">
@@ -188,17 +227,29 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
             onChange={(e) => setInput(e.target.value)}
             placeholder="질문을 입력하세요..."
             disabled={isLoading}
-            className="flex-1 bg-background focus:ring-primary/30"
+            className="flex-1 bg-background focus:ring-primary/30 rounded-full"
           />
           <Button
             type="submit"
             size="icon"
             disabled={isLoading || !input.trim()}
-            className="btn-gradient border-0 disabled:opacity-50 shadow-primary hover-lift"
+            className="btn-gradient border-0 disabled:opacity-50 shadow-primary hover-lift rounded-full"
           >
             <Send className="h-4 w-4 text-white" />
           </Button>
         </form>
+      </div>
+
+      {/* Resize Handle */}
+      <div
+        onMouseDown={handleResizeStart}
+        className={cn(
+          "absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center cursor-nw-resize transition-colors group",
+          isResizing && "bg-primary/30",
+        )}
+        title="드래그하여 크기 조절"
+      >
+        <Maximize2 className="h-3 w-3 text-primary group-hover:scale-110 transition-transform" />
       </div>
     </div>
   )
