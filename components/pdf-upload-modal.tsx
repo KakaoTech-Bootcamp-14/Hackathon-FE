@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import type { StudyPlan, Chapter } from "@/app/page"
+import { createSchedule } from "@/lib/api/schedule"
 
 interface PdfUploadModalProps {
   open: boolean
@@ -34,13 +35,19 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [pdfName, setPdfName] = useState<string>("")
   const [settings, setSettings] = useState({
+    startDate: "",
     dueDate: "",
     dailyHours: 2,
-    includeWeekends: false,
+    excludeWeekends: false,
     excludedDates: [] as string[],
   })
   const [generatingProgress, setGeneratingProgress] = useState(0)
   const [generatedPlan, setGeneratedPlan] = useState<StudyPlan | null>(null)
+
+  const isGenerateDisabled =
+    !settings.startDate ||
+    !settings.dueDate ||
+    new Date(settings.dueDate) < new Date(settings.startDate)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -72,66 +79,94 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
     }
   }
 
-  const handleGenerate = async () => {
-    setStep("generating")
-
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      setGeneratingProgress(i)
-    }
-
-    const mockPlan: StudyPlan = {
-      id: Date.now().toString(),
-      pdfName: pdfName || "새 학습 자료",
-      totalProgress: 0,
-      dueDate: settings.dueDate,
-      dailyHours: settings.dailyHours,
-      includeWeekends: settings.includeWeekends,
-      excludedDates: settings.excludedDates,
-      chapters: generateMockChapters(settings.dueDate),
-    }
-
-    setGeneratedPlan(mockPlan)
-    setStep("preview")
-  }
-
-  const generateMockChapters = (dueDate: string): Chapter[] => {
+  const buildChaptersFromApi = (chapterInfoDtos: any[]): Chapter[] => {
     const chapters: Chapter[] = []
-    const startDate = new Date()
-    const chapterTitles = ["기초 개념 이해", "핵심 이론 학습", "응용 사례 분석", "실전 문제 풀이", "종합 정리"]
 
-    chapterTitles.forEach((title, index) => {
-      const scheduledDate = new Date(startDate)
-      scheduledDate.setDate(startDate.getDate() + index + 1)
+    chapterInfoDtos.forEach((chapterDto: any, index: number) => {
+      const tasks = chapterDto.taskInfoDtos || []
+      if (!tasks.length) return
+
+      // 해당 챕터의 학습 날짜는 task들 중 가장 이른 날짜로 설정
+      const earliestDate = tasks
+        .map((t: any) => new Date(t.studyDate))
+        .reduce((min: Date, d: Date) => (d < min ? d : min), new Date(tasks[0].studyDate))
+
+      const scheduledDate = earliestDate.toISOString().split("T")[0]
+
+      const sections = tasks.map((task: any, taskIndex: number) => ({
+        id: `task-${task.taskId ?? `${index}-${taskIndex}`}`,
+        title: task.taskTitle,
+        content: "",
+        keyPoints: [] as string[],
+        definitions: [] as string[],
+        completed: task.taskStatus === "DONE",
+      }))
 
       chapters.push({
-        id: `new-c${index + 1}`,
-        title: `Chapter ${index + 1}. ${title}`,
-        scheduledDate: scheduledDate.toISOString().split("T")[0],
+        id: `chapter-${chapterDto.chapterId ?? index}`,
+        title: chapterDto.chapterTitle,
+        sections,
+        scheduledDate,
         completed: false,
-        estimatedMinutes: 45 + Math.floor(Math.random() * 30),
-        sections: [
-          {
-            id: `new-s${index * 2 + 1}`,
-            title: `${index + 1}.1 개요`,
-            content: "이 섹션에서는 기본 개념을 다룹니다.",
-            keyPoints: ["핵심 포인트 1", "핵심 포인트 2"],
-            definitions: ["정의 1", "정의 2"],
-            completed: false,
-          },
-          {
-            id: `new-s${index * 2 + 2}`,
-            title: `${index + 1}.2 심화 내용`,
-            content: "심화 내용을 학습합니다.",
-            keyPoints: ["심화 포인트 1"],
-            definitions: ["심화 정의 1"],
-            completed: false,
-          },
-        ],
       })
     })
 
     return chapters
+  }
+
+  const handleGenerate = async () => {
+    if (!uploadedFile) {
+      alert("먼저 PDF 파일을 업로드해주세요.")
+      return
+    }
+
+    const requestPayload = {
+      learningSourceTitle: pdfName || uploadedFile.name.replace(".pdf", ""),
+      startDate: settings.startDate,
+      endDate: settings.dueDate,
+      // 서버 DTO가 int이므로 소수점은 반올림해서 보냄
+      dailyStudyTime: Math.round(settings.dailyHours),
+      excludeWeekend: settings.excludeWeekends,
+    }
+
+    try {
+      setStep("generating")
+      setGeneratingProgress(30)
+
+      // 백엔드에 학습 스케줄 생성 요청 (멀티파트)
+      const response: any = await createSchedule(uploadedFile, requestPayload)
+
+      setGeneratingProgress(80)
+
+      const chapterInfoDtos = response?.data?.chapterInfoDtos ?? []
+      const chaptersFromApi = buildChaptersFromApi(chapterInfoDtos)
+
+      if (!chaptersFromApi.length) {
+        throw new Error("생성된 학습 계획이 없습니다.")
+      }
+
+      const generated: StudyPlan = {
+        id: Date.now().toString(),
+        pdfName: pdfName || "새 학습 자료",
+        totalProgress: 0,
+        dueDate: settings.dueDate,
+        dailyHours: settings.dailyHours,
+        excludeWeekends: settings.excludeWeekends,
+        excludedDates: settings.excludedDates,
+        chapters: chaptersFromApi,
+      }
+
+      setGeneratedPlan(generated)
+      setGeneratingProgress(100)
+      setStep("preview")
+    } catch (error) {
+      console.error("Failed to create schedule", error)
+      alert("학습 스케줄 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+      setStep("settings")
+      setGeneratingProgress(0)
+      return
+    }
+
   }
 
   const handleConfirm = () => {
@@ -148,9 +183,10 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
     setGeneratingProgress(0)
     setGeneratedPlan(null)
     setSettings({
+      startDate: "",
       dueDate: "",
       dailyHours: 2,
-      includeWeekends: false,
+      excludeWeekends: false,
       excludedDates: [],
     })
     onOpenChange(false)
@@ -212,6 +248,20 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="startDate" className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  목표 시작일
+                </Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={settings.startDate}
+                  onChange={(e) => setSettings({ ...settings, startDate: e.target.value })}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="dueDate" className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   목표 완료일
@@ -221,7 +271,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
                   type="date"
                   value={settings.dueDate}
                   onChange={(e) => setSettings({ ...settings, dueDate: e.target.value })}
-                  min={new Date().toISOString().split("T")[0]}
+                  min={settings.startDate || new Date().toISOString().split("T")[0]}
                   className="bg-background"
                 />
               </div>
@@ -251,12 +301,34 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="weekends" className="flex items-center gap-2 cursor-pointer text-sm">
-                  주말에도 학습하기
+                  주말 제외하기
                 </Label>
                 <Switch
                   id="weekends"
-                  checked={settings.includeWeekends}
-                  onCheckedChange={(checked) => setSettings({ ...settings, includeWeekends: checked })}
+                  checked={settings.excludeWeekends}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      // 목표 시작일 주말 체크
+                      if (settings.startDate) {
+                        const start = new Date(settings.startDate + "T00:00:00")
+                        const startDay = start.getDay() // 0: 일요일, 6: 토요일
+                        if (startDay === 0 || startDay === 6) {
+                          alert("목표 시작일에 주말이 포함되어있습니다.")
+                          return
+                        }
+                      }
+                      // 목표 완료일 주말 체크
+                      if (settings.dueDate) {
+                        const end = new Date(settings.dueDate + "T00:00:00")
+                        const endDay = end.getDay()
+                        if (endDay === 0 || endDay === 6) {
+                          alert("목표 완료일에 주말이 포함되어있습니다.")
+                          return
+                        }
+                      }
+                    }
+                    setSettings({ ...settings, excludeWeekends: checked })
+                  }}
                 />
               </div>
             </div>
@@ -266,7 +338,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
               </Button>
               <Button
                 onClick={handleGenerate}
-                disabled={!settings.dueDate}
+                disabled={isGenerateDisabled}
                 className="gap-2 btn-gradient text-white border-0 disabled:opacity-50"
               >
                 <Zap className="h-4 w-4" />
@@ -330,7 +402,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
                     <div>
                       <p className="font-medium text-sm text-foreground">{chapter.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {chapter.sections.length}개 섹션 · {chapter.estimatedMinutes}분
+                        {chapter.sections.length}개 섹션
                       </p>
                     </div>
                     <div className="text-right">

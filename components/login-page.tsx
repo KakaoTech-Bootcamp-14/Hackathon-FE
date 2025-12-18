@@ -1,26 +1,40 @@
-"use client"
+ "use client"
 
 import type React from "react"
 
 import { useState } from "react"
-import { Zap, Mail, Lock, ArrowRight } from "lucide-react"
+import { Zap, User, Lock, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { login } from "@/lib/api/auth"
 
 interface LoginPageProps {
   onLogin: () => void
   onCreateAccount: () => void
-  onForgotPassword: () => void
 }
 
-export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginPageProps) {
-  const [email, setEmail] = useState("")
+export function LoginPage({ onLogin, onCreateAccount }: LoginPageProps) {
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onLogin()
+
+    if (loading) return
+
+    try {
+      setLoading(true)
+      await login({ username, password })
+      onLogin()
+    } catch (error) {
+      // TODO: 에러 UI 연결 (toast 등)
+      console.error("Login failed", error)
+      alert("로그인에 실패했습니다. 아이디/비밀번호를 확인해주세요.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -41,17 +55,17 @@ export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginP
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm text-foreground">
-                이메일
+              <Label htmlFor="username" className="text-sm text-foreground">
+                아이디
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="아이디를 입력하세요"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="pl-10 bg-background"
                 />
               </div>
@@ -66,7 +80,7 @@ export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginP
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="비밀번호를 입력하세요"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 bg-background"
@@ -74,20 +88,17 @@ export function LoginPage({ onLogin, onCreateAccount, onForgotPassword }: LoginP
               </div>
             </div>
 
-            <Button type="submit" className="w-full btn-gradient text-white border-0 h-11 gap-2 hover-lift shadow-primary">
-              로그인
+            <Button
+              type="submit"
+              className="w-full btn-gradient text-white border-0 h-11 gap-2 hover-lift shadow-primary"
+              disabled={loading}
+            >
+              {loading ? "로그인 중..." : "로그인"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </form>
 
           <div className="mt-6 space-y-3">
-            <button
-              onClick={onForgotPassword}
-              className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              비밀번호를 잊으셨나요?
-            </button>
-
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border" />

@@ -2,29 +2,14 @@
 
 import type React from "react"
 
-import { useState, useMemo } from "react"
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Clock,
-  BookOpen,
-  Calendar,
-  GripVertical,
-  Check,
-  Zap,
-  Trash2,
-  Menu,
-  Home,
-  ChevronDown,
-  Lock,
-  Pencil,
-  X,
-} from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
+import { ChevronLeft, ChevronRight, Plus, Clock, BookOpen, Calendar, GripVertical, Check, Zap, Trash2, Menu, Home, ChevronDown, Lock, Pencil, X, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import {
   Dialog,
   DialogContent,
@@ -46,19 +31,31 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
+import { reCreateSchedule } from "@/lib/api/schedule"
+import { updateTaskCompletionStatus } from "@/lib/api/study"
+import { ChatBot } from "@/components/chatbot"
 import type { StudyPlan, Chapter } from "@/app/page"
 
 interface HomeCalendarProps {
   studyPlans: StudyPlan[]
   onAddPdf: () => void
-  onViewPdf: (plan: StudyPlan) => void
+  onViewPdf: (plan: StudyPlan, openChat?: boolean) => void
   onUpdatePlans: (plans: StudyPlan[]) => void
   onDeletePlan: (planId: string) => void
+  onLogout: () => void
 }
 
 type ViewMode = "month" | "week"
 
-export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, onDeletePlan }: HomeCalendarProps) {
+// 로컬 타임존 기준 YYYY-MM-DD 문자열 생성
+const getLocalDateKey = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, onDeletePlan, onLogout }: HomeCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<ViewMode>("month")
@@ -73,6 +70,15 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set())
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null)
   const [editingPlanName, setEditingPlanName] = useState<string>("")
+  const [replanTargetPlan, setReplanTargetPlan] = useState<StudyPlan | null>(null)
+  const [replanLoading, setReplanLoading] = useState(false)
+  const [replanSettings, setReplanSettings] = useState({
+    startDate: "",
+    dueDate: "",
+    dailyHours: 2,
+    excludeWeekends: false,
+  })
+  const [qnaPlan, setQnaPlan] = useState<StudyPlan | null>(null)
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -87,6 +93,11 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
         : 0
     return { totalChapters, completedChapters, overallProgress, remainingDays }
   }, [studyPlans, today])
+
+  // 자료(title) 기준으로는 항상 펼쳐진 상태 유지
+  useEffect(() => {
+    setExpandedPlans(new Set(studyPlans.map((p) => p.id)))
+  }, [studyPlans])
 
   const calendarDays = useMemo(() => {
     const year = currentDate.getFullYear()
@@ -116,7 +127,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   }, [currentDate])
 
   const getChaptersForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0]
+    const dateStr = getLocalDateKey(date)
     const results: { plan: StudyPlan; chapter: Chapter }[] = []
     studyPlans.forEach((plan) => {
       plan.chapters.forEach((chapter) => {
@@ -129,7 +140,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   }
 
   const getHierarchicalTasksForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0]
+    const dateStr = getLocalDateKey(date)
     const planMap = new Map<string, { plan: StudyPlan; chapters: Chapter[] }>()
 
     studyPlans.forEach((plan) => {
@@ -148,6 +159,16 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
     const chapters = getChaptersForDate(date)
     return chapters.length > 0
   }
+
+  // 기본적으로 조회된 날짜의 챕터들은 모두 펼쳐진 상태로 두기
+  useEffect(() => {
+    const initialExpanded = new Set<string>()
+    const tasksForDate = getHierarchicalTasksForDate(selectedDate)
+    tasksForDate.forEach(({ chapters }) => {
+      chapters.forEach((chapter) => initialExpanded.add(chapter.id))
+    })
+    setExpandedChapters(initialExpanded)
+  }, [selectedDate, studyPlans])
 
   const handlePrevious = () => {
     const newDate = new Date(currentDate)
@@ -180,7 +201,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   const handleDrop = (targetDate: Date) => {
     if (!draggedChapter) return
 
-    const dateStr = targetDate.toISOString().split("T")[0]
+    const dateStr = getLocalDateKey(targetDate)
     const updatedPlans = studyPlans.map((plan) => {
       if (plan.id === draggedChapter.planId) {
         return {
@@ -196,11 +217,87 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
     setDraggedChapter(null)
   }
 
-  const handleReplan = () => {
-    setShowReplanModal(false)
+  const buildChaptersFromApi = (chapterInfoDtos: any[]): Chapter[] => {
+    const chapters: Chapter[] = []
+
+    chapterInfoDtos.forEach((chapterDto: any, index: number) => {
+      const tasks = chapterDto.taskInfoDtos || []
+      if (!tasks.length) return
+
+      const earliestDate = tasks
+        .map((t: any) => new Date(t.studyDate))
+        .reduce((min: Date, d: Date) => (d < min ? d : min), new Date(tasks[0].studyDate))
+
+      const scheduledDate = earliestDate.toISOString().split("T")[0]
+
+      const sections = tasks.map((task: any, taskIndex: number) => ({
+        id: `task-${task.taskId ?? `${index}-${taskIndex}`}`,
+        title: task.taskTitle,
+        content: "",
+        keyPoints: [] as string[],
+        definitions: [] as string[],
+        completed: task.taskStatus === "DONE",
+      }))
+
+      chapters.push({
+        id: `chapter-${chapterDto.chapterId ?? index}`,
+        title: chapterDto.chapterTitle,
+        sections,
+        scheduledDate,
+        completed: false,
+      })
+    })
+
+    return chapters
   }
 
-  const toggleSectionComplete = (planId: string, chapterId: string, sectionId: string) => {
+  const handleReplan = async () => {
+    if (!replanTargetPlan) {
+      return
+    }
+
+    try {
+      setReplanLoading(true)
+      const request = {
+        learningSourceTitle: replanTargetPlan.pdfName,
+        startDate: replanSettings.startDate,
+        endDate: replanSettings.dueDate,
+        dailyStudyTime: Math.round(replanSettings.dailyHours),
+        excludeWeekend: replanSettings.excludeWeekends,
+      }
+
+      const response: any = await reCreateSchedule(request)
+      const chapterInfoDtos = response?.data?.chapterInfoDtos ?? []
+      const chaptersFromApi = buildChaptersFromApi(chapterInfoDtos)
+
+      if (!chaptersFromApi.length) {
+        alert("재생성된 학습 스케줄이 없습니다.")
+        return
+      }
+
+      const updatedPlans = studyPlans.map((plan) =>
+        plan.id === replanTargetPlan.id
+          ? {
+              ...plan,
+              chapters: chaptersFromApi,
+              dueDate: replanSettings.dueDate || plan.dueDate,
+              dailyHours: replanSettings.dailyHours,
+              excludeWeekends: replanSettings.excludeWeekends,
+            }
+          : plan,
+      )
+
+      onUpdatePlans(updatedPlans)
+    } catch (error) {
+      console.error("Failed to re-create schedule", error)
+      alert("스케줄 재생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+    } finally {
+      setReplanLoading(false)
+      setShowReplanModal(false)
+    }
+  }
+
+  const toggleSectionComplete = async (planId: string, chapterId: string, sectionId: string) => {
     const updatedPlans = studyPlans.map((plan) => {
       if (plan.id === planId) {
         return {
@@ -223,7 +320,23 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
       }
       return plan
     })
+
     onUpdatePlans(updatedPlans)
+
+    // 방금 토글한 섹션과 taskId 계산
+    const targetPlan = updatedPlans.find((p) => p.id === planId)
+    const targetChapter = targetPlan?.chapters.find((c) => c.id === chapterId)
+    const targetSection = targetChapter?.sections.find((s) => s.id === sectionId)
+    const taskIdMatch = targetSection?.id.match(/task-(\d+)/)
+    const taskId = taskIdMatch ? Number(taskIdMatch[1]) : null
+
+    if (taskId && targetSection) {
+      try {
+        await updateTaskCompletionStatus(taskId, targetSection.completed ? "DONE" : "TODO")
+      } catch (e) {
+        console.error("Failed to update task completion status from home calendar", e)
+      }
+    }
   }
 
   const handleConfirmDelete = () => {
@@ -459,6 +572,15 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                 주간
               </Button>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/5 gap-1"
+              onClick={onLogout}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              로그아웃
+            </Button>
           </div>
 
           <div className="flex items-center justify-between">
@@ -609,15 +731,10 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
             </div>
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
                 size="sm"
-                className="gap-2 text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/40 bg-transparent shadow-sm hover-lift transition-smooth rounded-full"
-                onClick={() => setShowReplanModal(true)}
+                className="gap-2 btn-gradient text-white border-0 shadow-md hover-lift rounded-full"
+                onClick={onAddPdf}
               >
-                <Zap className="h-4 w-4" />
-                ZEUS AI 재배치
-              </Button>
-              <Button size="sm" className="gap-2 btn-gradient text-white border-0 shadow-md hover-lift rounded-full" onClick={onAddPdf}>
                 <Plus className="h-4 w-4" />
                 학습자료 추가
               </Button>
@@ -625,7 +742,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-scroll p-6">
           {selectedDateTasks.size === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="w-16 h-16 rounded-full gradient-purple-pink flex items-center justify-center mb-4 shadow-lg animate-scale-in">
@@ -698,10 +815,56 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                             </button>
                           </CollapsibleTrigger>
                           <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-1 h-8 px-3 text-[11px] gap-1 border-slate-200 text-slate-600 hover:bg-secondary hover:border-primary/30"
+                            onClick={() => {
+                              setQnaPlan(plan)
+                              // QnA봇을 열 때 해당 자료 블록이 접혀 있으면 자동으로 펼쳐줌
+                              setExpandedPlans((prev) => {
+                                const next = new Set(prev)
+                                next.add(planId)
+                                return next
+                              })
+                            }}
+                          >
+                            <Zap className="h-3 w-3 text-primary" />
+                            AI 학습 Agent
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="ml-1 h-8 px-3 text-[11px] gap-1 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50"
+                            onClick={() => {
+                              setReplanTargetPlan(plan)
+                              // 기존 플랜 정보로 초기값 세팅
+                              const allDates = plan.chapters.map((ch) => new Date(ch.scheduledDate))
+                              const minDate =
+                                allDates.length > 0
+                                  ? new Date(Math.min(...allDates.map((d) => d.getTime())))
+                                  : new Date()
+                              const maxDate =
+                                allDates.length > 0
+                                  ? new Date(Math.max(...allDates.map((d) => d.getTime())))
+                                  : new Date(plan.dueDate)
+
+                              setReplanSettings({
+                                startDate: minDate.toISOString().split("T")[0],
+                                dueDate: maxDate.toISOString().split("T")[0],
+                                dailyHours: plan.dailyHours,
+                                excludeWeekends: plan.excludeWeekends,
+                              })
+                              setShowReplanModal(true)
+                            }}
+                          >
+                            <Zap className="h-3 w-3" />
+                            스케줄 재생성
+                          </Button>
+                          <Button
                             size="icon"
                             variant="ghost"
                             onClick={() => startEditingPlanName(planId, plan.pdfName)}
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-2 hover:bg-secondary"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-secondary"
                           >
                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
@@ -710,6 +873,23 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                     </div>
 
                     <CollapsibleContent>
+                      {/* 홈 QnA봇: 자료 제목 아래, 챕터/태스크 목록 위에 표시 */}
+                      {qnaPlan?.id === plan.id && (
+                        <div className="ml-3 pl-6 pt-2">
+                          <div className="rounded-2xl border border-border bg-card shadow-lg glass-subtle overflow-hidden">
+                            <ChatBot
+                              pdfName={plan.pdfName}
+                              currentChapter={chapters[0]?.title || plan.pdfName}
+                              currentSection={chapters[0]?.sections[0]?.title}
+                              learningSourceId={plan.learningSourceId}
+                              currentUserId={1}
+                              embedded
+                              onClose={() => setQnaPlan(null)}
+                            />
+                          </div>
+                        </div>
+                      )}
+
                       <div className="space-y-3 ml-3 pl-6 pt-2">
                         {chapters.map((chapter, chapterIndex) => (
                           <div key={chapter.id} className="space-y-2">
@@ -725,8 +905,16 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                               draggable
                               onDragStart={() => handleDragStart(plan.id, chapter.id)}
                             >
-                              <button
+                              <div
+                                role="button"
+                                tabIndex={0}
                                 onClick={() => toggleChapterExpand(chapter.id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault()
+                                    toggleChapterExpand(chapter.id)
+                                  }
+                                }}
                                 className="w-full px-5 py-3.5 flex items-center gap-4"
                               >
                                 {/* Lock Icon */}
@@ -751,12 +939,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                                       </span>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-3 text-xs text-slate-500">
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      {chapter.estimatedMinutes}분
-                                    </span>
-                                    <span>·</span>
+                                  <div className="flex items-center gap-2 text-xs text-slate-500">
                                     <span>
                                       {chapter.sections.filter((s) => s.completed).length}/{chapter.sections.length}{" "}
                                       완료
@@ -764,26 +947,20 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                                   </div>
                                 </div>
 
-                                {/* Plus Button */}
-                                <div className="shrink-0">
-                                  <div
-                                    className={cn(
-                                      "h-8 w-8 rounded-full transition-all duration-200",
-                                      "bg-slate-200/50 border border-slate-300/50",
-                                      "flex items-center justify-center",
-                                      "group-hover/chapter:bg-indigo-100/60 group-hover/chapter:border-indigo-300/60",
-                                      expandedChapters.has(chapter.id) && "bg-primary/15 border-primary/50 rotate-45",
-                                    )}
+                                {/* 오른쪽 액션 버튼: 챕터 상세 보기(>) */}
+                                <div className="shrink-0 flex items-center">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      onViewPdf(plan)
+                                    }}
+                                    className="h-8 w-8 rounded-full border border-slate-300/60 bg-white/70 flex items-center justify-center hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm"
                                   >
-                                    <Plus
-                                      className={cn(
-                                        "h-4 w-4 transition-colors",
-                                        expandedChapters.has(chapter.id) ? "text-primary" : "text-slate-500",
-                                      )}
-                                    />
-                                  </div>
+                                    <ChevronRight className="h-4 w-4 text-slate-500" />
+                                  </button>
                                 </div>
-                              </button>
+                              </div>
                             </div>
 
                             {/* 소제목: 섹션들 (챕터가 확장되었을 때만 표시) */}
@@ -846,38 +1023,152 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
       </div>
 
       {/* Replan Modal */}
-      <Dialog open={showReplanModal} onOpenChange={setShowReplanModal}>
+      <Dialog
+        open={showReplanModal}
+        onOpenChange={(open) => {
+          if (!replanLoading) {
+            setShowReplanModal(open)
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-primary" />
-              ZEUS AI 일정 재배치
+              ZEUS AI 스케줄 재생성
             </DialogTitle>
-            <DialogDescription>현재 진도와 남은 기간을 분석하여 최적의 학습 일정을 다시 계산합니다.</DialogDescription>
+            <DialogDescription>학습 기간과 하루 학습 시간을 다시 설정하고 스케줄을 재생성합니다.</DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <div className="p-4 bg-secondary rounded-lg space-y-2">
-              <p className="text-sm">
-                <span className="text-muted-foreground">현재 진도:</span>{" "}
-                <span className="font-medium">{stats.overallProgress}%</span>
-              </p>
-              <p className="text-sm">
-                <span className="text-muted-foreground">남은 챕터:</span>{" "}
-                <span className="font-medium">{stats.totalChapters - stats.completedChapters}개</span>
-              </p>
-              <p className="text-sm">
-                <span className="text-muted-foreground">남은 기간:</span>{" "}
-                <span className="font-medium">D-{stats.remainingDays}</span>
-              </p>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="replan-startDate" className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                목표 시작일
+              </Label>
+              <Input
+                id="replan-startDate"
+                type="date"
+                value={replanSettings.startDate}
+                onChange={(e) =>
+                  setReplanSettings((prev) => ({
+                    ...prev,
+                    startDate: e.target.value,
+                    // 완료일 최소값 보장을 위해 필요 시 여기서도 조정 가능
+                  }))
+                }
+                min={new Date().toISOString().split("T")[0]}
+                className="bg-background"
+                disabled={replanLoading}
+              />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="replan-dueDate" className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                목표 완료일
+              </Label>
+              <Input
+                id="replan-dueDate"
+                type="date"
+                value={replanSettings.dueDate}
+                onChange={(e) =>
+                  setReplanSettings((prev) => ({
+                    ...prev,
+                    dueDate: e.target.value,
+                  }))
+                }
+                min={replanSettings.startDate || new Date().toISOString().split("T")[0]}
+                className="bg-background"
+                disabled={replanLoading}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="replan-dailyHours" className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                하루 학습 가능 시간
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="replan-dailyHours"
+                  type="number"
+                  min={0.5}
+                  max={8}
+                  step={0.5}
+                  value={replanSettings.dailyHours}
+                  onChange={(e) =>
+                    setReplanSettings((prev) => ({
+                      ...prev,
+                      dailyHours: Number.parseFloat(e.target.value || "0") || 0,
+                    }))
+                  }
+                  className="w-20 bg-background"
+                  disabled={replanLoading}
+                />
+                <span className="text-sm text-muted-foreground">시간</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="replan-weekends" className="flex items-center gap-2 cursor-pointer text-sm">
+                주말 제외하기
+              </Label>
+              <Switch
+                id="replan-weekends"
+                checked={replanSettings.excludeWeekends}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    // 목표 시작일 주말 체크
+                    if (replanSettings.startDate) {
+                      const start = new Date(replanSettings.startDate + "T00:00:00")
+                      const startDay = start.getDay() // 0: 일요일, 6: 토요일
+                      if (startDay === 0 || startDay === 6) {
+                        alert("목표 시작일에 주말이 포함되어있습니다.")
+                        return
+                      }
+                    }
+                    // 목표 완료일 주말 체크
+                    if (replanSettings.dueDate) {
+                      const end = new Date(replanSettings.dueDate + "T00:00:00")
+                      const endDay = end.getDay()
+                      if (endDay === 0 || endDay === 6) {
+                        alert("목표 완료일에 주말이 포함되어있습니다.")
+                        return
+                      }
+                    }
+                  }
+                  setReplanSettings((prev) => ({ ...prev, excludeWeekends: checked }))
+                }}
+                disabled={replanLoading}
+              />
+            </div>
+
+            {replanLoading && (
+              <div className="flex flex-col items-center justify-center pt-2 space-y-2">
+                <div className="w-10 h-10 rounded-full gradient-purple-pink flex items-center justify-center animate-pulse shadow-md">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <p className="text-xs text-muted-foreground">스케줄 재생성 중...</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReplanModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowReplanModal(false)}
+              disabled={replanLoading}
+            >
               취소
             </Button>
-            <Button onClick={handleReplan} className="gap-2 btn-gradient text-white border-0">
+            <Button
+              onClick={handleReplan}
+              disabled={
+                replanLoading ||
+                !replanSettings.startDate ||
+                !replanSettings.dueDate ||
+                new Date(replanSettings.dueDate) < new Date(replanSettings.startDate)
+              }
+              className="gap-2 btn-gradient text-white border-0 disabled:opacity-50"
+            >
               <Zap className="h-4 w-4" />
-              재배치 실행
+              {replanLoading ? "재생성 중..." : "ZEUS AI로 스케줄 재생성"}
             </Button>
           </DialogFooter>
         </DialogContent>
