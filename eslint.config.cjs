@@ -1,20 +1,28 @@
 // eslint.config.cjs
-const js = require("@eslint/js");
-const tseslint = require("typescript-eslint");
+const tsParser = require("@typescript-eslint/parser");
 
 module.exports = [
-    // JavaScript 문법 오류만
-    js.configs.recommended,
-
-    // TypeScript 문법/타입 오류만
-    ...tseslint.configs.recommended,
-
-    // 검사 대상 파일
     {
+        // ✅ JS / JSX / TS / TSX 전부 대상
         files: ["**/*.{js,jsx,ts,tsx}"],
+
+        // ✅ 파싱만 담당
+        languageOptions: {
+            ecmaVersion: "latest",
+            sourceType: "module",
+            parser: tsParser, // JS/TS 모두 파싱 가능
+            parserOptions: {
+                ecmaFeatures: {
+                    jsx: true,
+                },
+            },
+        },
+
+        // ✅ 규칙 0개 = 문법 오류(파싱 에러)만 체크
+        rules: {},
     },
 
-    // 완전 무시할 경로
+    // ✅ 완전 무시할 경로
     {
         ignores: [
             "node_modules",
@@ -25,6 +33,8 @@ module.exports = [
             "build",
             ".turbo",
             "public",
+            "eslint.config.*",
+            "**/*.config.*",
         ],
     },
 ];
