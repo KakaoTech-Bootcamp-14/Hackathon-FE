@@ -149,9 +149,18 @@ export default function Home() {
     load()
   }, [currentView, homeLoaded])
 
-  const handlePlanCreated = (newPlan: StudyPlan) => {
+  const handlePlanCreated = async (newPlan: StudyPlan) => {
     setStudyPlans([...studyPlans, newPlan])
     setShowUploadModal(false)
+
+    // PDF 생성 후 홈 데이터를 다시 불러와서 실제 learningSourceId 반영
+    try {
+      const res = await fetchHomeData()
+      const plans = mapHomeDataToStudyPlans(res.data)
+      setStudyPlans(plans)
+    } catch (error: any) {
+      console.error("Failed to reload home data after plan creation", error)
+    }
   }
 
   const handlePlanUpdate = (updatedPlan: StudyPlan) => {
