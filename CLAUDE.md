@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ZEUS AI is an AI-powered study planner application that creates optimal learning schedules from PDF documents. The application is built with Next.js 16, React 19, TypeScript, and uses shadcn/ui components with Tailwind CSS.
+나비서는 an AI-powered study planner application that creates optimal learning schedules from PDF documents. The application is built with Next.js 16, React 19, TypeScript, and uses shadcn/ui components with Tailwind CSS.
 
 ## Development Commands
 

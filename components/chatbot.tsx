@@ -54,7 +54,7 @@ export function ChatBot({
     const greeting: Message = {
       id: "greeting-1",
       role: "assistant",
-      content: `안녕하세요! ZEUS AI입니다. "${pdfName}" 학습을 도와드리겠습니다. 현재 "${safeChapter}"를 학습 중이시네요. 궁금한 점이 있으시면 질문해주세요!`,
+      content: `안녕하세요! 나비서입니다. "${pdfName}" 학습을 도와드리겠습니다. 현재 "${safeChapter}"를 학습 중이시네요. 궁금한 점이 있으시면 질문해주세요!`,
     }
 
     // learningSourceId가 없으면 서버 기록 없이 기본 인사만 보여준다.
@@ -393,7 +393,7 @@ export function ChatBot({
             <Zap className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-foreground">ZEUS AI 학습 Agent</h3>
+            <h3 className="font-semibold text-sm text-foreground">나비서 학습 Agent</h3>
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-secondary">

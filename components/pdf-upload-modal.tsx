@@ -258,7 +258,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
             <DialogHeader>
               <DialogTitle>PDF 업로드</DialogTitle>
               <DialogDescription>
-                학습할 PDF 파일을 업로드하세요. ZEUS AI가 분석하여 학습 계획을 생성합니다.
+                학습할 PDF 파일을 업로드하세요. 나비서가 분석하여 학습 계획을 생성합니다.
               </DialogDescription>
             </DialogHeader>
             <div
@@ -395,7 +395,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
                 className="gap-2 btn-gradient text-white border-0 disabled:opacity-50"
               >
                 <Zap className="h-4 w-4" />
-                ZEUS AI로 계획 생성
+                나비서로 계획 생성
               </Button>
             </DialogFooter>
           </>
@@ -404,7 +404,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
         {step === "generating" && (
           <>
             <DialogHeader>
-              <DialogTitle>ZEUS AI가 분석 중입니다</DialogTitle>
+              <DialogTitle>나비서가 분석 중입니다</DialogTitle>
               <DialogDescription>PDF를 분석하고 최적의 학습 계획을 생성하고 있습니다.</DialogDescription>
             </DialogHeader>
             <div className="py-8 space-y-4">

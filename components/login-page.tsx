@@ -45,7 +45,7 @@ export function LoginPage({ onLogin, onCreateAccount }: LoginPageProps) {
           <div className="w-16 h-16 rounded-xl icon-gradient flex items-center justify-center shadow-primary glow-primary mb-4 animate-scale-in">
             <Zap className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">ZEUS AI</h1>
+          <h1 className="text-2xl font-bold text-foreground">나비서</h1>
           <p className="text-sm text-muted-foreground mt-1">학습의 신이 함께합니다</p>
         </div>
 
@@ -119,7 +119,7 @@ export function LoginPage({ onLogin, onCreateAccount }: LoginPageProps) {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          계속 진행하면 ZEUS AI의 서비스 약관 및 개인정보 처리방침에 동의하는 것입니다.
+          계속 진행하면 나비서의 서비스 약관 및 개인정보 처리방침에 동의하는 것입니다.
         </p>
       </div>
     </div>

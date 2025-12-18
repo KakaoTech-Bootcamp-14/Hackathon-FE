@@ -49,14 +49,14 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
           <div className="w-16 h-16 rounded-xl icon-gradient flex items-center justify-center shadow-primary glow-primary mb-4 animate-scale-in">
             <Zap className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">ZEUS AI</h1>
+          <h1 className="text-2xl font-bold text-foreground">나비서</h1>
           <p className="text-sm text-muted-foreground mt-1">학습 계획의 새로운 시작</p>
         </div>
 
         {/* Sign Up Form */}
         <div className="bg-card border border-border rounded-2xl p-8 shadow-xl glass-subtle animate-fade-in-up">
           <h2 className="text-xl font-semibold text-foreground mb-2 text-center">계정 만들기</h2>
-          <p className="text-sm text-muted-foreground text-center mb-6">ZEUS AI와 함께 효율적인 학습을 시작하세요</p>
+          <p className="text-sm text-muted-foreground text-center mb-6">나비서와 함께 효율적인 학습을 시작하세요</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
@@ -115,7 +115,7 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
               className="w-full btn-gradient text-white border-0 h-11 gap-2 hover-lift shadow-primary"
               disabled={loading}
             >
-              {loading ? "가입 중..." : "ZEUS AI 시작하기"}
+              {loading ? "가입 중..." : "나비서 시작하기"}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </form>
@@ -133,7 +133,7 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          가입 시 ZEUS AI의 서비스 약관 및 개인정보 처리방침에 동의하는 것입니다.
+          가입 시 나비서의 서비스 약관 및 개인정보 처리방침에 동의하는 것입니다.
         </p>
       </div>
     </div>
