@@ -18,13 +18,10 @@ import {
   Home,
   ChevronDown,
   Lock,
-  Pencil,
-  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -71,8 +68,6 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   const [deleteConfirmPlan, setDeleteConfirmPlan] = useState<StudyPlan | null>(null)
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set(studyPlans.map((p) => p.id)))
   const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set())
-  const [editingPlanId, setEditingPlanId] = useState<string | null>(null)
-  const [editingPlanName, setEditingPlanName] = useState<string>("")
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -251,27 +246,6 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
       newExpanded.add(chapterId)
     }
     setExpandedChapters(newExpanded)
-  }
-
-  const startEditingPlanName = (planId: string, currentName: string) => {
-    setEditingPlanId(planId)
-    setEditingPlanName(currentName)
-  }
-
-  const saveEditingPlanName = () => {
-    if (editingPlanId && editingPlanName.trim()) {
-      const updatedPlans = studyPlans.map((plan) =>
-        plan.id === editingPlanId ? { ...plan, pdfName: editingPlanName.trim() } : plan,
-      )
-      onUpdatePlans(updatedPlans)
-    }
-    setEditingPlanId(null)
-    setEditingPlanName("")
-  }
-
-  const cancelEditingPlanName = () => {
-    setEditingPlanId(null)
-    setEditingPlanName("")
   }
 
   const formatDateHeader = () => {
@@ -648,66 +622,23 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                 >
                   <div className="space-y-3">
                     {/* 대제목: PDF 이름 */}
-                    <div className="flex items-center justify-between group">
-                      {editingPlanId === planId ? (
-                        <div className="flex-1 flex items-center gap-2">
-                          <Input
-                            value={editingPlanName}
-                            onChange={(e) => setEditingPlanName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") saveEditingPlanName()
-                              if (e.key === "Escape") cancelEditingPlanName()
-                            }}
-                            className="text-lg font-bold bg-secondary/50 border-primary/30 focus-visible:ring-primary/30"
-                            autoFocus
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={saveEditingPlanName}
-                            className="h-8 w-8 text-primary hover:bg-primary/10"
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={cancelEditingPlanName}
-                            className="h-8 w-8 text-muted-foreground hover:bg-secondary"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                    <CollapsibleTrigger asChild>
+                      <button className="flex items-center gap-3 text-left w-full">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 shrink-0 shadow-sm">
+                          <BookOpen className="h-4 w-4 text-primary" />
                         </div>
-                      ) : (
-                        <>
-                          <CollapsibleTrigger asChild>
-                            <button className="flex-1 flex items-center gap-3 text-left">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 shrink-0 shadow-sm">
-                                <BookOpen className="h-4 w-4 text-primary" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-lg font-bold text-foreground truncate">{plan.pdfName}</h3>
-                                <p className="text-xs text-muted-foreground">{chapters.length}개 챕터</p>
-                              </div>
-                              <ChevronDown
-                                className={cn(
-                                  "h-5 w-5 text-muted-foreground transition-transform duration-200",
-                                  expandedPlans.has(planId) && "rotate-180",
-                                )}
-                              />
-                            </button>
-                          </CollapsibleTrigger>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => startEditingPlanName(planId, plan.pdfName)}
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-2 hover:bg-secondary"
-                          >
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-bold text-foreground truncate">{plan.pdfName}</h3>
+                          <p className="text-xs text-muted-foreground">{chapters.length}개 챕터</p>
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            "h-5 w-5 text-muted-foreground transition-transform duration-200",
+                            expandedPlans.has(planId) && "rotate-180",
+                          )}
+                        />
+                      </button>
+                    </CollapsibleTrigger>
 
                     <CollapsibleContent>
                       <div className="space-y-3 ml-3 pl-6 pt-2">
