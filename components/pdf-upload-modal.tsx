@@ -171,15 +171,15 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
               className={cn(
                 "border-2 border-dashed rounded-lg p-8 text-center transition-all",
                 isDragging
-                  ? "border-primary/50 bg-primary/5"
-                  : "border-border hover:border-primary/30 hover:bg-secondary/50",
+                  ? "border-primary/50 bg-primary/10 shadow-primary-lg scale-105"
+                  : "border-border hover:border-primary/30 hover:bg-secondary/50 hover-lift transition-smooth",
               )}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-4">
-                <Upload className="h-6 w-6 text-primary/70" />
+              <div className="w-14 h-14 rounded-full gradient-cyan-blue flex items-center justify-center mx-auto mb-4 shadow-primary animate-scale-in">
+                <Upload className="h-6 w-6 text-white" />
               </div>
               <p className="text-sm text-muted-foreground mb-2">PDF 파일을 여기에 드래그하거나</p>
               <label className="cursor-pointer">
@@ -285,8 +285,8 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
             <div className="py-8 space-y-4">
               <div className="flex items-center justify-center">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">
-                    <Zap className="h-8 w-8 text-primary animate-pulse" />
+                  <div className="w-20 h-20 rounded-full gradient-purple-pink flex items-center justify-center shadow-primary-lg glow-primary">
+                    <Zap className="h-8 w-8 text-white animate-pulse" />
                   </div>
                 </div>
               </div>
@@ -325,7 +325,7 @@ export function PdfUploadModal({ open, onOpenChange, onPlanCreated }: PdfUploadM
                 {generatedPlan.chapters.map((chapter) => (
                   <div
                     key={chapter.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border bg-card shadow-soft hover:bg-secondary/30 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg border border-border bg-card shadow-md glass-subtle hover:bg-secondary/30 hover-lift transition-smooth"
                   >
                     <div>
                       <p className="font-medium text-sm text-foreground">{chapter.title}</p>

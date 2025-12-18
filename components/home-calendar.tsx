@@ -323,8 +323,8 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <div className="w-[420px] border-r border-border bg-card flex flex-col">
+    <div className="flex h-screen bg-background animate-page-enter">
+      <div className="w-[420px] border-r border-border bg-card flex flex-col shadow-lg rounded-r-3xl">
         <header className="border-b border-border px-4 py-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -337,7 +337,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                 <SheetContent side="left" className="w-[300px] p-0 bg-background">
                   <SheetHeader className="border-b border-border p-4">
                     <SheetTitle className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg icon-gradient">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg icon-gradient shadow-primary">
                         <Zap className="h-4 w-4 text-white" />
                       </div>
                       <span className="font-semibold">ZEUS AI</span>
@@ -424,19 +424,19 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
               </Sheet>
 
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-md icon-gradient">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full icon-gradient shadow-md">
                   <Zap className="h-3.5 w-3.5 text-white" />
                 </div>
                 <span className="font-semibold text-foreground">ZEUS AI</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 bg-secondary rounded-md p-0.5">
+            <div className="flex items-center gap-1 bg-secondary rounded-full p-0.5">
               <Button
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-7 px-2.5 text-xs font-medium transition-all",
+                  "h-7 px-2.5 text-xs font-medium transition-all rounded-full",
                   viewMode === "month"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -449,7 +449,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "h-7 px-2.5 text-xs font-medium transition-all",
+                  "h-7 px-2.5 text-xs font-medium transition-all rounded-full",
                   viewMode === "week"
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -465,7 +465,21 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
             <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-8 w-8 hover:bg-secondary">
               <ChevronLeft className="h-4 w-4 text-muted-foreground" />
             </Button>
-            <h2 className="font-semibold text-foreground">{formatDateHeader()}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-foreground">{formatDateHeader()}</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const today = new Date()
+                  setCurrentDate(today)
+                  setSelectedDate(today)
+                }}
+                className="h-6 px-2.5 text-xs text-primary hover:bg-primary/10 hover-lift transition-smooth rounded-full"
+              >
+                오늘
+              </Button>
+            </div>
             <Button variant="ghost" size="icon" onClick={handleNext} className="h-8 w-8 hover:bg-secondary">
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -497,18 +511,18 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                     onDragOver={handleDragOver}
                     onDrop={() => handleDrop(date)}
                     className={cn(
-                      "aspect-square rounded-md flex flex-col items-center justify-center text-sm transition-all relative",
+                      "aspect-square rounded-2xl flex flex-col items-center justify-center text-sm transition-all relative",
                       !isCurrentMonth(date) && "text-muted-foreground/40",
                       isCurrentMonth(date) &&
                         !isToday(date) &&
                         !isSelected(date) &&
-                        "text-foreground hover:bg-secondary",
-                      isToday(date) && !isSelected(date) && "bg-primary/10 text-primary font-semibold",
-                      isSelected(date) && "bg-primary/8 ring-1 ring-primary/40 font-semibold",
+                        "text-foreground hover:bg-secondary/60 hover-scale transition-smooth",
+                      isToday(date) && !isSelected(date) && "bg-primary/10 text-primary font-semibold shadow-md ring-2 ring-primary/20",
+                      isSelected(date) && "bg-primary/15 ring-2 ring-primary/50 font-semibold shadow-md scale-105 transition-all",
                     )}
                   >
                     <span>{date.getDate()}</span>
-                    {hasItems && <div className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary/70" />}
+                    {hasItems && <div className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-primary shadow-sm" />}
                   </button>
                 )
               })}
@@ -526,9 +540,9 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                     onDragOver={handleDragOver}
                     onDrop={() => handleDrop(date)}
                     className={cn(
-                      "rounded-lg p-2 cursor-pointer transition-all min-h-[120px] border",
-                      isToday(date) ? "border-primary/25 bg-primary/5" : "border-transparent hover:bg-secondary",
-                      isSelected(date) && "ring-1 ring-primary/40 bg-primary/5",
+                      "rounded-2xl p-2 cursor-pointer transition-all min-h-[120px] border",
+                      isToday(date) ? "border-primary/25 bg-primary/5 shadow-sm" : "border-transparent hover:bg-secondary/60",
+                      isSelected(date) && "ring-2 ring-primary/40 bg-primary/10 shadow-md",
                     )}
                   >
                     <div
@@ -549,7 +563,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                         <div
                           key={chapter.id}
                           className={cn(
-                            "text-xs p-1.5 rounded truncate",
+                            "text-xs p-1.5 rounded-xl truncate shadow-sm",
                             chapter.completed
                               ? "bg-accent/10 text-muted-foreground line-through"
                               : "bg-primary/10 text-foreground",
@@ -570,12 +584,12 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
         )}
 
         {studyPlans.length > 0 && (
-          <div className="p-3 border-t border-border">
+          <div className="p-3 border-t border-border bg-gradient-to-b from-transparent to-secondary/30">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">전체 진도</span>
               <span className="text-sm font-semibold text-foreground">{stats.overallProgress}%</span>
             </div>
-            <Progress value={stats.overallProgress} className="h-1.5" />
+            <Progress value={stats.overallProgress} className="h-2 rounded-full" />
             <div className="flex justify-between mt-2 text-xs text-muted-foreground">
               <span>
                 {stats.completedChapters}/{stats.totalChapters} 챕터
@@ -587,23 +601,23 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
       </div>
 
       <div className="flex-1 flex flex-col bg-background">
-        <header className="border-b border-border px-6 py-4 bg-card">
+        <header className="border-b border-border px-6 py-4 bg-card rounded-br-3xl">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-foreground">{formatSelectedDate()}</h1>
-              <p className="text-sm text-muted-foreground mt-0.5">{getTotalTaskCount()}개의 학습 항목</p>
+              <h1 className="text-[10px] font-normal text-muted-foreground/80">{formatSelectedDate()}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">{getTotalTaskCount()}개의 학습 항목</p>
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/40 bg-transparent"
+                className="gap-2 text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/40 bg-transparent shadow-sm hover-lift transition-smooth rounded-full"
                 onClick={() => setShowReplanModal(true)}
               >
                 <Zap className="h-4 w-4" />
                 ZEUS AI 재배치
               </Button>
-              <Button size="sm" className="gap-2 btn-gradient text-white border-0" onClick={onAddPdf}>
+              <Button size="sm" className="gap-2 btn-gradient text-white border-0 shadow-md hover-lift rounded-full" onClick={onAddPdf}>
                 <Plus className="h-4 w-4" />
                 학습자료 추가
               </Button>
@@ -614,12 +628,12 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
         <div className="flex-1 overflow-y-auto p-6">
           {selectedDateTasks.size === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-4">
-                <Calendar className="h-7 w-7 text-primary/60" />
+              <div className="w-16 h-16 rounded-full gradient-purple-pink flex items-center justify-center mb-4 shadow-lg animate-scale-in">
+                <Calendar className="h-7 w-7 text-white" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">이 날에 학습 일정이 없습니다</h3>
               <p className="text-sm text-muted-foreground mb-4">PDF를 업로드하면 ZEUS AI가 학습 계획을 생성합니다</p>
-              <Button onClick={onAddPdf} className="gap-2 btn-gradient text-white border-0">
+              <Button onClick={onAddPdf} className="gap-2 btn-gradient text-white border-0 shadow-lg hover-lift rounded-full">
                 <Plus className="h-4 w-4" />
                 학습자료 추가
               </Button>
@@ -668,7 +682,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                         <>
                           <CollapsibleTrigger asChild>
                             <button className="flex-1 flex items-center gap-3 text-left">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 shrink-0">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 shrink-0 shadow-sm">
                                 <BookOpen className="h-4 w-4 text-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -702,11 +716,10 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                             {/* 중제목: 챕터 Pill */}
                             <div
                               className={cn(
-                                "group/chapter rounded-full backdrop-blur-sm transition-all duration-200",
-                                "bg-gradient-to-r from-slate-100/10 via-indigo-50/8 to-slate-100/10",
-                                "border border-slate-300/15 shadow-sm",
-                                "hover:border-indigo-300/25 hover:shadow-md hover:shadow-indigo-500/5",
-                                "hover:from-slate-100/15 hover:via-indigo-50/12 hover:to-slate-100/15",
+                                "group/chapter rounded-full glass-subtle transition-all duration-200",
+                                "bg-gradient-to-r from-primary/5 via-primary/8 to-primary/5",
+                                "border border-primary/15 shadow-md",
+                                "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 hover-lift",
                                 expandedChapters.has(chapter.id) && "border-primary/30 shadow-lg shadow-primary/8",
                               )}
                               draggable
@@ -782,8 +795,8 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                                     onClick={() => toggleSectionComplete(plan.id, chapter.id, section.id)}
                                     className={cn(
                                       "group/section flex items-center gap-3 px-4 py-2.5 rounded-full",
-                                      "bg-white/40 border border-slate-200/60 backdrop-blur-sm",
-                                      "hover:bg-indigo-50/50 hover:border-indigo-200/70",
+                                      "bg-white/40 border border-slate-200/60 backdrop-blur-sm shadow-sm",
+                                      "hover:bg-indigo-50/50 hover:border-indigo-200/70 hover:shadow-md",
                                       "cursor-pointer transition-all duration-150",
                                     )}
                                   >
@@ -816,7 +829,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
                         <div className="pt-2">
                           <button
                             onClick={() => onViewPdf(plan)}
-                            className="w-full py-2.5 px-4 rounded-full text-xs text-slate-500 hover:text-primary transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-indigo-200/50 hover:bg-indigo-50/30"
+                            className="w-full py-2.5 px-4 rounded-full text-xs text-slate-500 hover:text-primary transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-indigo-200/50 hover:bg-indigo-50/30 hover:shadow-sm"
                           >
                             상세 보기
                             <ChevronRight className="h-3.5 w-3.5" />

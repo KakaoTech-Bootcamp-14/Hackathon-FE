@@ -7,6 +7,7 @@ import { SignUpPage } from "@/components/signup-page"
 import { HomeCalendar } from "@/components/home-calendar"
 import { PdfUploadModal } from "@/components/pdf-upload-modal"
 import { PdfDetailView } from "@/components/pdf-detail-view"
+import { CelebrationPage } from "@/components/celebration-page"
 
 export type StudyPlan = {
   id: string
@@ -37,7 +38,7 @@ export type Section = {
   completed: boolean
 }
 
-type AppView = "splash" | "login" | "signup" | "home" | "pdf-detail"
+type AppView = "splash" | "login" | "signup" | "home" | "pdf-detail" | "celebration"
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<AppView>("splash")
@@ -160,8 +161,21 @@ export default function Home() {
   }
 
   const handlePlanUpdate = (updatedPlan: StudyPlan) => {
-    setStudyPlans(studyPlans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p)))
-    setSelectedPlan(updatedPlan)
+    // Calculate progress based on completed chapters
+    const totalChapters = updatedPlan.chapters.length
+    const completedChapters = updatedPlan.chapters.filter((ch) => ch.completed).length
+    const progress = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0
+
+    // Update plan with calculated progress
+    const planWithProgress = { ...updatedPlan, totalProgress: progress }
+
+    setStudyPlans(studyPlans.map((p) => (p.id === planWithProgress.id ? planWithProgress : p)))
+    setSelectedPlan(planWithProgress)
+
+    // Check if plan is 100% complete and show celebration
+    if (progress === 100 && completedChapters === totalChapters) {
+      setCurrentView("celebration")
+    }
   }
 
   const handleViewPdf = (plan: StudyPlan) => {
@@ -197,6 +211,10 @@ export default function Home() {
 
   if (currentView === "signup") {
     return <SignUpPage onSignUp={handleSignUp} onBackToLogin={() => setCurrentView("login")} />
+  }
+
+  if (currentView === "celebration" && selectedPlan) {
+    return <CelebrationPage plan={selectedPlan} onBackToHome={() => setCurrentView("home")} />
   }
 
   return (

@@ -87,9 +87,9 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background animate-page-enter">
       {/* 좌측 사이드바 - 목차 */}
-      <div className="w-80 border-r border-border bg-card flex flex-col">
+      <div className="w-80 border-r border-border bg-card flex flex-col shadow-lg">
         <div className="p-4 border-b border-border">
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-2 mb-3 hover:bg-secondary">
             <ArrowLeft className="h-4 w-4" />
@@ -113,7 +113,7 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
                   onClick={() => selectChapter(chapter)}
                   className={cn(
                     "w-full text-left p-3 rounded-lg transition-all",
-                    selectedChapter.id === chapter.id ? "bg-primary/8 ring-1 ring-primary/25" : "hover:bg-secondary",
+                    selectedChapter.id === chapter.id ? "bg-primary/10 ring-2 ring-primary/30 shadow-primary" : "hover:bg-secondary hover-lift transition-smooth",
                   )}
                 >
                   <div className="flex items-start gap-2">
@@ -245,10 +245,10 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
               </div>
 
               {/* 핵심 개념 */}
-              <Card className="border border-border bg-card shadow-soft">
+              <Card className="border border-border bg-card shadow-lg glass-subtle hover-lift">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
-                    <div className="w-5 h-5 rounded icon-gradient flex items-center justify-center">
+                    <div className="w-5 h-5 rounded icon-gradient flex items-center justify-center shadow-sm">
                       <Lightbulb className="h-3 w-3 text-white" />
                     </div>
                     핵심 개념
@@ -267,7 +267,7 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
               </Card>
 
               {/* 주요 정의 */}
-              <Card className="border border-border bg-card shadow-soft">
+              <Card className="border border-border bg-card shadow-lg glass-subtle hover-lift">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-accent" />
@@ -330,7 +330,7 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
       {/* 챗봇 플로팅 버튼 */}
       <Button
         onClick={() => setShowChatbot(!showChatbot)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 btn-gradient border-0"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl glow-primary z-50 btn-gradient border-0 hover-lift animate-scale-in"
         size="icon"
         title="ZEUS AI 학습 도우미"
       >

@@ -24,11 +24,11 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen gradient-mesh animate-fade-in flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 rounded-xl icon-gradient flex items-center justify-center shadow-md mb-4">
+          <div className="w-16 h-16 rounded-xl icon-gradient flex items-center justify-center shadow-primary glow-primary mb-4 animate-scale-in">
             <Zap className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">ZEUS AI</h1>
@@ -36,7 +36,7 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
         </div>
 
         {/* Sign Up Form */}
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-soft">
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-xl glass-subtle animate-fade-in-up">
           <h2 className="text-xl font-semibold text-foreground mb-2 text-center">계정 만들기</h2>
           <p className="text-sm text-muted-foreground text-center mb-6">ZEUS AI와 함께 효율적인 학습을 시작하세요</p>
 
@@ -93,7 +93,7 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
               <p className="text-xs text-muted-foreground">비밀번호는 8자 이상이어야 합니다</p>
             </div>
 
-            <Button type="submit" className="w-full btn-gradient text-white border-0 h-11 gap-2">
+            <Button type="submit" className="w-full btn-gradient text-white border-0 h-11 gap-2 hover-lift shadow-primary">
               ZEUS AI 시작하기
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -103,7 +103,7 @@ export function SignUpPage({ onSignUp, onBackToLogin }: SignUpPageProps) {
             <Button
               variant="ghost"
               onClick={onBackToLogin}
-              className="w-full h-11 text-muted-foreground hover:text-foreground gap-2"
+              className="w-full h-11 text-muted-foreground hover:text-foreground gap-2 hover-lift transition-smooth"
             >
               <ArrowLeft className="h-4 w-4" />
               로그인으로 돌아가기
