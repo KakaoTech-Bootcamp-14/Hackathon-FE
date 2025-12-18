@@ -122,8 +122,11 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
   return (
     <div
       ref={chatRef}
-      className="fixed bottom-24 right-6 glass border border-border/50 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-scale-in"
-      style={{ width: `${size.width}px`, height: `${size.height}px` }}
+      className="fixed bottom-0 md:bottom-24 left-0 md:left-auto right-0 md:right-6 glass border-t md:border border-border/50 md:rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden animate-scale-in"
+      style={{
+        width: window.innerWidth < 768 ? '100%' : `${size.width}px`,
+        height: window.innerWidth < 768 ? '70vh' : `${size.height}px`
+      }}
     >
       <div className="flex items-center justify-between p-4 border-b border-border/50 glass-primary">
         <div className="flex items-center gap-2">
@@ -240,11 +243,11 @@ export function ChatBot({ pdfName, currentChapter, currentSection, onClose }: Ch
         </form>
       </div>
 
-      {/* Resize Handle */}
+      {/* Resize Handle - 데스크톱만 */}
       <div
         onMouseDown={handleResizeStart}
         className={cn(
-          "absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center cursor-nw-resize transition-colors group",
+          "hidden md:flex absolute top-2 left-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 items-center justify-center cursor-nw-resize transition-colors group",
           isResizing && "bg-primary/30",
         )}
         title="드래그하여 크기 조절"

@@ -323,9 +323,10 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
   }
 
   return (
-    <div className="flex h-screen bg-background animate-page-enter">
-      <div className="w-[420px] border-r border-border bg-card flex flex-col shadow-lg rounded-r-3xl">
-        <header className="border-b border-border px-4 py-3">
+    <div className="flex flex-col md:flex-row h-screen bg-background animate-page-enter">
+      {/* 데스크톱: 사이드바, 모바일: 캘린더 */}
+      <div className="w-full md:w-[420px] border-r border-border bg-card flex flex-col shadow-lg md:rounded-r-3xl">
+        <header className="border-b border-border px-4 py-3 hidden md:block">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -486,8 +487,63 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
           </div>
         </header>
 
+        {/* 모바일 캘린더 헤더 */}
+        <div className="md:hidden border-b border-border px-3 py-2">
+          <div className="flex items-center justify-between mb-2">
+            <Button variant="ghost" size="icon" onClick={handlePrevious} className="h-8 w-8 hover:bg-secondary">
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <h2 className="font-semibold text-foreground text-sm">{formatDateHeader()}</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const today = new Date()
+                  setCurrentDate(today)
+                  setSelectedDate(today)
+                }}
+                className="h-6 px-2 text-xs text-primary hover:bg-primary/10 rounded-full"
+              >
+                오늘
+              </Button>
+            </div>
+            <Button variant="ghost" size="icon" onClick={handleNext} className="h-8 w-8 hover:bg-secondary">
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-1 bg-secondary rounded-full p-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-6 px-2.5 text-xs font-medium transition-all rounded-full flex-1",
+                viewMode === "month"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => setViewMode("month")}
+            >
+              월간
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-6 px-2.5 text-xs font-medium transition-all rounded-full flex-1",
+                viewMode === "week"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              onClick={() => setViewMode("week")}
+            >
+              주간
+            </Button>
+          </div>
+        </div>
+
         {viewMode === "month" ? (
-          <div className="flex-1 p-3">
+          <div className="flex-1 p-3 md:p-3 overflow-auto">
             <div className="grid grid-cols-7 mb-2">
               {["일", "월", "화", "수", "목", "금", "토"].map((day, i) => (
                 <div
@@ -529,7 +585,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
             </div>
           </div>
         ) : (
-          <div className="flex-1 p-3">
+          <div className="flex-1 p-3 md:p-3 overflow-auto">
             <div className="grid grid-cols-7 gap-2">
               {weekDays.map((date, index) => {
                 const chapters = getChaptersForDate(date)
@@ -584,7 +640,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
         )}
 
         {studyPlans.length > 0 && (
-          <div className="p-3 border-t border-border bg-gradient-to-b from-transparent to-secondary/30">
+          <div className="hidden md:block p-3 border-t border-border bg-gradient-to-b from-transparent to-secondary/30">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">전체 진도</span>
               <span className="text-sm font-semibold text-foreground">{stats.overallProgress}%</span>
@@ -600,32 +656,139 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
         )}
       </div>
 
-      <div className="flex-1 flex flex-col bg-background">
-        <header className="border-b border-border px-6 py-4 bg-card rounded-br-3xl">
+      {/* 데스크톱: 우측 상세 영역, 모바일: 하단 할일 영역 */}
+      <div className="flex-1 flex flex-col bg-background overflow-hidden">
+        <header className="border-b border-border px-3 md:px-6 py-3 md:py-4 bg-card md:rounded-br-3xl">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-[10px] font-normal text-muted-foreground/80">{formatSelectedDate()}</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">{getTotalTaskCount()}개의 학습 항목</p>
-            </div>
             <div className="flex items-center gap-2">
+              {/* 모바일 햄버거 메뉴 */}
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 hover:bg-secondary">
+                    <Menu className="h-5 w-5 text-muted-foreground" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] p-0 bg-background">
+                  <SheetHeader className="border-b border-border p-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg icon-gradient shadow-primary">
+                        <Zap className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="font-semibold">ZEUS AI</span>
+                    </SheetTitle>
+                  </SheetHeader>
+
+                  <div className="flex flex-col h-[calc(100%-73px)]">
+                    <div className="p-3 border-b border-border">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-3 h-10 hover:bg-secondary"
+                        onClick={() => setSidebarOpen(false)}
+                      >
+                        <Home className="h-4 w-4 text-muted-foreground" />
+                        <span>홈</span>
+                      </Button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-muted-foreground px-2">내 학습자료</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 hover:bg-primary/10"
+                          onClick={() => {
+                            setSidebarOpen(false)
+                            onAddPdf()
+                          }}
+                        >
+                          <Plus className="h-3.5 w-3.5 text-primary" />
+                        </Button>
+                      </div>
+
+                      {studyPlans.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-sm text-muted-foreground">아직 학습자료가 없습니다</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {studyPlans.map((plan) => (
+                            <div key={plan.id} className="group relative">
+                              <button
+                                onClick={() => {
+                                  setSidebarOpen(false)
+                                  onViewPdf(plan)
+                                }}
+                                className="w-full text-left p-2.5 rounded-md hover:bg-secondary transition-colors flex items-center gap-2"
+                              >
+                                <BookOpen className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <span className="text-sm truncate flex-1">{plan.pdfName}</span>
+                              </button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setDeleteConfirmPlan(plan)
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t border-border p-3">
+                      <Button
+                        className="w-full justify-start gap-3 h-10 btn-gradient text-white border-0"
+                        onClick={() => {
+                          setSidebarOpen(false)
+                          onAddPdf()
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>새 학습자료 추가</span>
+                      </Button>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              <div className="hidden md:block">
+                <h1 className="text-[10px] font-normal text-muted-foreground/80">{formatSelectedDate()}</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">{getTotalTaskCount()}개의 학습 항목</p>
+              </div>
+              {/* 모바일 타이틀 */}
+              <div className="md:hidden">
+                <h1 className="text-sm font-semibold text-foreground">ZEUS AI</h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 md:gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/40 bg-transparent shadow-sm hover-lift transition-smooth rounded-full"
+                className="hidden md:flex gap-2 text-primary border-primary/25 hover:bg-primary/5 hover:border-primary/40 bg-transparent shadow-sm hover-lift transition-smooth rounded-full"
                 onClick={() => setShowReplanModal(true)}
               >
                 <Zap className="h-4 w-4" />
-                ZEUS AI 재배치
+                <span className="hidden lg:inline">ZEUS AI 재배치</span>
               </Button>
-              <Button size="sm" className="gap-2 btn-gradient text-white border-0 shadow-md hover-lift rounded-full" onClick={onAddPdf}>
+              <Button
+                size="sm"
+                className="gap-2 btn-gradient text-white border-0 shadow-md hover-lift rounded-full"
+                onClick={onAddPdf}
+              >
                 <Plus className="h-4 w-4" />
-                학습자료 추가
+                <span className="hidden sm:inline">학습자료 추가</span>
               </Button>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6">
           {selectedDateTasks.size === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <div className="w-16 h-16 rounded-full gradient-purple-pink flex items-center justify-center mb-4 shadow-lg animate-scale-in">
@@ -639,7 +802,7 @@ export function HomeCalendar({ studyPlans, onAddPdf, onViewPdf, onUpdatePlans, o
               </Button>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="max-w-3xl mx-auto space-y-3 md:space-y-6">
               {Array.from(selectedDateTasks.entries()).map(([planId, { plan, chapters }]) => (
                 <Collapsible
                   key={planId}

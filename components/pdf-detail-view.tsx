@@ -12,6 +12,7 @@ import {
   Lightbulb,
   FileText,
   Zap,
+  Menu,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { ChatBot } from "@/components/chatbot"
 import type { StudyPlan, Chapter, Section } from "@/app/page"
@@ -34,6 +36,7 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
   const [selectedSection, setSelectedSection] = useState<Section | null>(plan.chapters[0]?.sections[0] || null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   const [showChatbot, setShowChatbot] = useState(false)
+  const [tocOpen, setTocOpen] = useState(false)
 
   const totalProgress = Math.round((plan.chapters.filter((c) => c.completed).length / plan.chapters.length) * 100)
 
@@ -84,12 +87,107 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
     if (chapter.sections.length > 0) {
       setSelectedSection(chapter.sections[0])
     }
+    setTocOpen(false) // 모바일에서 선택 후 TOC 닫기
   }
+
+  const TocContent = () => (
+    <ScrollArea className="flex-1">
+      <div className="p-2">
+        {plan.chapters.map((chapter) => (
+          <div key={chapter.id} className="mb-1">
+            <button
+              onClick={() => selectChapter(chapter)}
+              className={cn(
+                "w-full text-left p-3 rounded-lg transition-all",
+                selectedChapter.id === chapter.id
+                  ? "bg-primary/10 ring-2 ring-primary/30 shadow-primary"
+                  : "hover:bg-secondary hover-lift transition-smooth",
+              )}
+            >
+              <div className="flex items-start gap-2">
+                <div
+                  className={cn(
+                    "mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                    chapter.completed ? "icon-gradient border-transparent" : "border-border hover:border-primary/40",
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleToggleChapterComplete(chapter.id)
+                  }}
+                >
+                  {chapter.completed && <Check className="h-3 w-3 text-white" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn("font-medium text-sm", chapter.completed && "text-muted-foreground line-through")}>
+                    {chapter.title}
+                  </p>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(chapter.scheduledDate).toLocaleDateString("ko-KR", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {chapter.estimatedMinutes}분
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 text-muted-foreground transition-transform",
+                    selectedChapter.id === chapter.id && "rotate-90",
+                  )}
+                />
+              </div>
+            </button>
+
+            {/* 섹션 목록 */}
+            {selectedChapter.id === chapter.id && (
+              <div className="ml-6 mt-1 space-y-0.5">
+                {chapter.sections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => {
+                      setSelectedSection(section)
+                      setTocOpen(false)
+                    }}
+                    className={cn(
+                      "w-full text-left p-2 rounded-md text-sm transition-all flex items-center gap-2",
+                      selectedSection?.id === section.id
+                        ? "bg-primary/8 text-primary font-medium"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all",
+                        section.completed ? "icon-gradient border-transparent" : "border-border",
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleToggleSectionComplete(chapter.id, section.id)
+                      }}
+                    >
+                      {section.completed && <Check className="h-2.5 w-2.5 text-white" />}
+                    </div>
+                    <span className={cn("truncate", section.completed && "line-through")}>{section.title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  )
 
   return (
     <div className="flex h-screen bg-background animate-page-enter">
-      {/* 좌측 사이드바 - 목차 */}
-      <div className="w-80 border-r border-border bg-card flex flex-col shadow-lg">
+      {/* 데스크톱 좌측 사이드바 - 목차 */}
+      <div className="hidden md:flex md:w-80 border-r border-border bg-card flex-col shadow-lg">
         <div className="p-4 border-b border-border">
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-2 mb-3 hover:bg-secondary">
             <ArrowLeft className="h-4 w-4" />
@@ -101,111 +199,60 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
               <span className="text-muted-foreground">전체 진도</span>
               <span className="font-medium text-foreground">{totalProgress}%</span>
             </div>
-            <Progress value={totalProgress} className="h-1.5" />
+            <Progress value={totalProgress} className="h-1.5 rounded-full" />
           </div>
         </div>
 
-        <ScrollArea className="flex-1">
-          <div className="p-2">
-            {plan.chapters.map((chapter) => (
-              <div key={chapter.id} className="mb-1">
-                <button
-                  onClick={() => selectChapter(chapter)}
-                  className={cn(
-                    "w-full text-left p-3 rounded-lg transition-all",
-                    selectedChapter.id === chapter.id ? "bg-primary/10 ring-2 ring-primary/30 shadow-primary" : "hover:bg-secondary hover-lift transition-smooth",
-                  )}
-                >
-                  <div className="flex items-start gap-2">
-                    <div
-                      className={cn(
-                        "mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
-                        chapter.completed
-                          ? "icon-gradient border-transparent"
-                          : "border-border hover:border-primary/40",
-                      )}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleToggleChapterComplete(chapter.id)
-                      }}
-                    >
-                      {chapter.completed && <Check className="h-3 w-3 text-white" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={cn("font-medium text-sm", chapter.completed && "text-muted-foreground line-through")}
-                      >
-                        {chapter.title}
-                      </p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(chapter.scheduledDate).toLocaleDateString("ko-KR", {
-                            month: "short",
-                            day: "numeric",
-                          })}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {chapter.estimatedMinutes}분
-                        </span>
-                      </div>
-                    </div>
-                    <ChevronRight
-                      className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform",
-                        selectedChapter.id === chapter.id && "rotate-90",
-                      )}
-                    />
-                  </div>
-                </button>
-
-                {/* 섹션 목록 */}
-                {selectedChapter.id === chapter.id && (
-                  <div className="ml-6 mt-1 space-y-0.5">
-                    {chapter.sections.map((section) => (
-                      <button
-                        key={section.id}
-                        onClick={() => setSelectedSection(section)}
-                        className={cn(
-                          "w-full text-left p-2 rounded-md text-sm transition-all flex items-center gap-2",
-                          selectedSection?.id === section.id
-                            ? "bg-primary/8 text-primary font-medium"
-                            : "text-muted-foreground hover:text-foreground hover:bg-secondary",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all",
-                            section.completed ? "icon-gradient border-transparent" : "border-border",
-                          )}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleSectionComplete(chapter.id, section.id)
-                          }}
-                        >
-                          {section.completed && <Check className="h-2.5 w-2.5 text-white" />}
-                        </div>
-                        <span className={cn("truncate", section.completed && "line-through")}>{section.title}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
+        <TocContent />
       </div>
 
-      {/* 우측 메인 콘텐츠 */}
+      {/* 메인 콘텐츠 */}
       <div className="flex-1 flex flex-col bg-background">
-        <header className="border-b border-border bg-card px-6 py-4">
+        <header className="border-b border-border bg-card px-3 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div>
+            {/* 모바일 TOC 버튼 */}
+            <div className="flex items-center gap-2">
+              <Sheet open={tocOpen} onOpenChange={setTocOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 hover:bg-secondary">
+                    <Menu className="h-5 w-5 text-muted-foreground" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] p-0 bg-background">
+                  <SheetHeader className="border-b border-border p-4">
+                    <SheetTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-primary" />
+                      <span className="font-semibold">목차</span>
+                    </SheetTitle>
+                    <div className="mt-2 space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">전체 진도</span>
+                        <span className="font-medium text-foreground">{totalProgress}%</span>
+                      </div>
+                      <Progress value={totalProgress} className="h-1.5 rounded-full" />
+                    </div>
+                  </SheetHeader>
+                  <TocContent />
+                </SheetContent>
+              </Sheet>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="hidden md:flex gap-2 hover:bg-secondary rounded-full"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                돌아가기
+              </Button>
+            </div>
+
+            <div className="flex-1 min-w-0 mx-2 md:mx-0">
               <div className="flex items-center gap-2">
                 <Badge
                   variant={selectedChapter.completed ? "default" : "secondary"}
                   className={cn(
+                    "text-xs",
                     selectedChapter.completed
                       ? "bg-gradient-to-r from-primary/90 to-primary/70 text-white border-0"
                       : "bg-secondary text-secondary-foreground",
@@ -213,7 +260,7 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
                 >
                   {selectedChapter.completed ? "완료" : "진행중"}
                 </Badge>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-xs md:text-sm text-muted-foreground hidden sm:inline">
                   {new Date(selectedChapter.scheduledDate).toLocaleDateString("ko-KR", {
                     year: "numeric",
                     month: "long",
@@ -222,20 +269,27 @@ export function PdfDetailView({ plan, onBack, onUpdatePlan }: PdfDetailViewProps
                   예정
                 </span>
               </div>
-              <h1 className="text-2xl font-bold mt-2 text-foreground">{selectedChapter.title}</h1>
+              <h1 className="text-lg md:text-2xl font-bold mt-1 md:mt-2 text-foreground truncate">
+                {selectedChapter.title}
+              </h1>
             </div>
             <Button
               onClick={() => handleToggleChapterComplete(selectedChapter.id)}
               variant={selectedChapter.completed ? "outline" : "default"}
-              className={cn("gap-2", !selectedChapter.completed && "btn-gradient text-white border-0")}
+              size="sm"
+              className={cn(
+                "gap-1 md:gap-2 rounded-full shrink-0",
+                !selectedChapter.completed && "btn-gradient text-white border-0",
+              )}
             >
               <Check className="h-4 w-4" />
-              {selectedChapter.completed ? "완료 취소" : "챕터 완료"}
+              <span className="hidden sm:inline">{selectedChapter.completed ? "완료 취소" : "챕터 완료"}</span>
+              <span className="sm:hidden">완료</span>
             </Button>
           </div>
         </header>
 
-        <ScrollArea className="flex-1 p-6">
+        <ScrollArea className="flex-1 p-3 md:p-6">
           {selectedSection ? (
             <div className="max-w-3xl mx-auto space-y-6">
               {/* 섹션 제목 */}
